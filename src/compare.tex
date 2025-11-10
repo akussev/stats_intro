@@ -1,0 +1,578 @@
+\section{Сравнение оценок}
+
+\subsection{Функция потерь и асимптотическая дисперсия}\label{compare_methods}
+
+Итак, мы научились с горем пополам строить оценки с различными свойствами. Как же их сравнивать? Один из способов сравнения оценок -- введение некоторой функции, которая будет показывать, насколько сильно оценка отличается от истинного значения параметра.
+
+\begin{definition}
+Борелевская неотрицательная функция двух переменных $g(x, y)$ называется \textit{функцией потерь}. Пусть $\theta^*$ -- оценка параметра $\theta$, $g(x, y)$ -- функция потерь. Функция $R(\theta^*, \theta) = \me g(\theta^*, \theta)$ называется \textit{функцией риска} оценки $\theta^*$.
+\end{definition}
+
+Зачастую, в качестве такой функции потерь берут $g(x, y) = |x - y|$ или $g(x, y) = (x - y)^2$ -- \textit{квадратичную функцию потерь}. Последний вариант полезен и тем, что для несмещённых оценок функция риска представляет собой дисперсию (т. к. $\theta = \me\hat{\theta}$).
+
+Ясно, что хорошая (в нашем понимании) оценка должна минимизировать функцию риска. Однако неясно, как сравнивать функции риска для разных оценок: для одних значений параметра одна оценка может иметь меньшую функцию риска, для других --- уже другая. Самое простое решение этой проблемы --- использовать \textit{равномерный подход}. В нём мы умеем сравнивать только те функции риска, среди которых одна мажорирует другую.
+
+\begin{definition}
+    Говорят, что оценка $\theta^*$ \textit{лучше} оценки $\hat \theta$ \textit{в равномерном подходе с функцией потерь g}, если для любого $\theta \in \Theta\colon R(\theta^*, \theta) \le R(\hat\theta, \theta)$, причём существует такое $\theta$, что неравенство является строгим. Равномерный подход с квадратичной функцией потерь называют \textit{среднеквадратичным}.
+\end{definition}
+
+\begin{example}
+    Пусть $\mathbf X = (X_1, \ldots, X_n)$ --- выборка из равномерного распределения на отрезке $U[0, \theta]$. Сравним следующие оценки параметра $\theta$ в среднеквадратичном подходе: $\widehat{\theta} = 2\overline{\mathbf X}$, $\theta^* = (n + 1)X_{(1)}$, $\widetilde{\theta} = \frac{n+1}{n}X_{(n)}$. Данные оценки являются несмещёнными (их матожидания были посчитаны ранее в примере \ref{example_of_properties}), а значит, их функция риска есть дисперсия.
+    
+    Для первой оценки получаем
+    \[
+    R(\widehat{\theta}, \theta) = \va (2\overline{\mathbf X}) = \frac{4}{n^2}\cdot\va \sum X_i = \frac{4}{n}\cdot\va X_i = \frac{4}{n}\cdot \frac{\theta^2}{12} = \frac{\theta^2}{3n}.
+    \]
+    
+    Перед нахождением дисперсии второй оценки вспомним, что для $t \in [0, \theta]$ выполнено
+    \begin{gather*}
+    	\pth(X_{(1)} \le t) = 1 - \pth(X_{(1)} > t) = 1 - \prod \pth(X_i > t) = \\
+    	= 1 - (1 - \pth(X_1 \le t))^n = 1 - \left(1 - \frac{t}{\theta}\right)^n,
+    \end{gather*}
+    а стало быть $\rho_{X_{(1)}}(t) = \frac{n}{\theta}\left(1 - \frac{t}{\theta}\right)^{n - 1}I_{[0, \theta]}(t)$. Отсюда можно в лоб посчитать дисперсию
+    \begin{gather*}
+    R((n+1)X_{(1)}, \theta) = \va (n+1)X_{(1)} = \me (n+1)^2X_{(1)}^2 - (\me (n+1)X_{(1)})^2 =\\
+    = -\theta^2 + (n+1)^2\int_0^{\theta} t^2\frac{n}{\theta}\left(1 - \frac{t}{\theta}\right)^{n - 1}\,dt = -\theta^2 + n(n+1)^2 \theta^2 \int_0^1 s^2(1-s)^{n-1} ds =\\
+    = -\theta^2 + n(n+1)^2 \theta^2 B(n, 3) = -\theta^2 + n(n+1)^2 \theta^2 \frac{2!(n-1)!}{(n+2)!} = \frac{\theta^2n}{n+2}.
+    \end{gather*}
+    Как видим, дисперсия не стремится к нулю при увеличении размера выборки, поэтому данная оценка весьма плохая в среднеквадратичном подходе. К тому же несложно проверить, что функция потерь оценки $\widehat{\theta}$ при любых значения $\theta$ будет не больше текущей.
+    
+    Наконец, рассмотрим оценку $\widetilde{\theta}$. Тут распределение ищется попроще: для $t\in[0, \theta]$
+    \[
+    \pth(X_{(n)} \le t) = \prod \pth(X_{i} \le t) = \frac{t^n}{\theta^n},
+    \]
+    поэтому $\rho_{X_{(n)}}(t) = \frac{nt^{n-1}}{\theta^n} I_{[0, \theta]}(t)$. Значит,
+    \begin{gather*}
+    R\left(\frac{n+1}{n}X_{(n)}, \theta\right) = \va \left[\frac{n+1}{n}\cdot X_{(n)} \right]= \me \left(\frac{n+1}{n}\cdot X_{(n)}\right)^2 - \frac{(n+1)^2}{n^2}\cdot\left(\me X_{(1)}\right)^2 =\\
+    =\frac{(n+1)^2}{n^2}\int_0^{\theta} t^2\cdot\frac{nt^{n-1}}{\theta^n}\,dt - \theta^2 = \left.\frac{(n+1)^2}{n} \cdot \frac{t^{n+2}}{\theta^n(n+2)}\right|_0^{\theta} - \theta^2=\\
+    = \frac{(n+1)^2\theta^2}{n(n+2)} -\theta^2 = \frac{\theta^2}{n(n+2)}.
+    \end{gather*}
+    Полученная дисперсия убывает даже быстрее, чем, казалось бы, самая логичная и простая оценка $2\overline{\mathbf X}$, что наводит на определённые мысли.
+\end{example}
+
+Ещё один способ сравнения оценок заключается в рассмотрении их асимптотической дисперсии (то есть этот метод применим только для асимптотически нормальных оценок). Ранее мы поняли, что она характеризует скорость сходимости оценки к истинному значению параметра, поэтому логично брать те оценки, которые минимизируют эту функцию. Более точно,
+\begin{definition}
+    Пусть $\widehat{\theta}$ и $\theta^*$ --- асимптотически нормальные оценки функции $\tau(\theta)$, а $\sigma_1^2(\theta)$ и $\sigma_2^2(\theta)$ --- асимптотические дисперсии $\widehat{\theta}$ и $\theta^*$ соответственно. Говорят, что оценка $\widehat{\theta}$ \textit{лучше} оценки $\theta^*$, если для любого $\theta \in \Theta$ выполнено неравенство $\sigma_1^2(\theta) \le \sigma_2^2(\theta)$, причём для некоторого $\theta$ неравенство строгое.
+\end{definition}
+
+\begin{example}
+    Рассмотрим некоторые примеры оценок и сравним их в асимптотическом подходе.
+    \begin{itemize}
+        \item Пусть $\mathbf X = (X_1, \ldots, X_n)$ --- выборка из распределения $\mathcal{N}(\theta, 1)$, где $\theta$ --- неизвестный параметр сдвига. Мы уже знаем по крайней мере две оценки этого параметра. Первая, самая естественная, есть $\overline{\mathbf X}$, которая имеет асимптотическую дисперсию $1$, так как
+        \[
+        \sqrt{n}(\overline{\mathbf X} - \theta) \sim \mathcal{N}(0, 1).
+        \]
+        Вторая же есть выборочная медиана $\widehat{\mu}(\mathbf X)$, которая по теореме о выборочном квантиле является асимптотически нормальной с асимптотической дисперсией $1/4\rho'_{\theta}(0)^2 = \pi/2$. Таким образом, $\overline{\mathbf X}$ лучше $\widehat{\mu}$ в асимптотическом подходе.
+        \item Иная ситуация обстоит с $X_1, \ldots, X_n \sim \laplaced(\theta, 1)$. Хвосты этого распределения заметно тяжелее, чем у нормального закона, поэтому обычное среднее здесь менее эффективно. По ЦПТ асимптотическая дисперсия $\overline{\mathbf X}$ равна $\va X_1 = 2$, при этом в то же время по теореме о выборочном квантиле та же величина для $\widehat{\mu}$ равна $1/4\rho'_{\theta}(0)^2 = 1$.
+        \item А вот оценки, полученные в примере \ref{quantile_example}, сравнить в данном подходе не получится: для некоторых значений параметра одна оценка имеет меньшую асимптотическую дисперсию, а при других --- вторая.
+    \end{itemize}
+\end{example}
+
+Помимо двух рассмотренных подходов существуют как минимум ещё два довольно популярных: \textit{байесовский} и \textit{минимаксный}. В отличие от равномерного и асимптотического подходов, которые умеют сравнивать не все оценки, эти два сводят функции риска к одной численной величине, что существенно расширяет наши возможности. Их определения и свойства приведены в главе \ref{bayes_method}.
+
+Далее нас будет интересовать, какие оценки являются лучшими относительно тех метрик, которые мы ввели ранее. Про асимптотический подход мы поговорим позже в главе \ref{mle}, а сейчас займёмся оптимизацией функции риска, а именно --- функции риска для квадратичной функции потерь.
+
+Нахождение наилучшей оценки среди всех возможных не имеет смысла, так как всегда можно взять оценку $\theta^* \equiv \theta_0$ для некоторого $\theta_0 \in \Theta$, и тогда функция риска $R(\theta^*, \theta_0)$ будет равна нулю. И если мы хотим найти оценку, которая будет не хуже любой другой, ей придётся <<обогнать>> и такую тривиальную оценку, тогда её функция риска будет тождественно нулевой, что, конечно, не представляется возможным. Поэтому обычно в среднеквадратичном подходе рассматривают несмещённые оценки: в отличие от тривиальных оценок выше они <<что-то знают>>, к тому же для них рассматриваемая функция потерь равна дисперсии. Впрочем, смещённые оценки нельзя просто так сбрасывать со счетов, так как они бывают получше некоторых несмещённых.
+
+\begin{example}[парадокс Штейна]
+    Рассмотрим модель, в которой элементы выборки представляют собой гауссовский вектор с независимыми компонентами, которые имеют единичную дисперсию и неизвестный параметр сдвига, свой для каждой компоненты, то есть они имеют распределение $\mathcal{N}(\boldtheta, E_k)$, где $\boldtheta = (\theta_1, \ldots, \theta_k)$ --- неизвестный вектор параметров, который необходимо оценить. Для простоты будем считать, что выборка состоит из одного единственного вектора $\mathbf X = (X_1, \ldots, X_k)$. Для $k = 1$ это будет обычная нормальная модель сдвига, и в ней имеется очевидная оценка $\widehat{\boldtheta} = \mathbf X$, которая, как выяснится позже, будет наилучшей в среднеквадратичном подходе.
+    
+    Логично предположить, что такими же <<хорошими>> будут оценки $\widehat{\boldtheta} = \mathbf X$, то есть каждую $\theta_i$ мы оценим соответствующей компонентой вектора $X_i$. Однако это неправда в смысле среднеквадратичной функции риска $R(\widehat \boldtheta, \boldtheta) = \me \|\widehat \boldtheta - \boldtheta\|^2$ при $k \ge 3$. Оказывается, имеется оценка равномерно лучше оценки $X$, а именно
+    \[
+    \widehat{\boldtheta} = \mathbf X - \frac{k-2}{\|\mathbf X\|^2} \cdot \mathbf X.
+    \]
+    Несмотря на, то что она имеет очевидное смещение, её функция риска всегда меньше функции риска, казалось бы, вполне естественной оценки $\mathbf X$. Читателю предлагается доказать этот факт.
+
+    Этот пример является типичной иллюстрацией соотношения между смещением и дисперсией оценки (\textit{англ.} \textsf{bias-variance tradeoff}). Дело в том, что среднеквадратичную ошибку оценки $\widehat{\theta}$ параметра $\theta$ можно разложить на её дисперсию и квадрат смещения:
+    \[
+    R(\widehat{\theta}, \theta) = \me (\widehat{\theta} - \theta)^2 = \va (\widehat{\theta} - \theta) + \left( \me[\theta] [\widehat{\theta} - \theta]\right)^2 = \underbrace{\va \widehat{\theta}}_{\text{дисперсия}} + \left( \lefteqn{\phantom{\me[\theta] [\widehat{\theta} - \theta]}} \smash{\underbrace{\me[\theta] [\widehat{\theta} - \theta]}_{\text{смещение}}}\right)^2
+    \]
+    Таким образом, среднеквадратичная ошибка зависит не только от того, насколько близко к истине предсказываемое значение параметра, но и от разброса этого значения, нашей уверенности в оценке. Зачастую добавление систематического сдвига помогает уменьшить дисперсию оценки, что может улучшить рассматриваемую функцию риска. В примере выше значения, которые выдаёт оценка, становятся более кучными, что и уменьшает среднеквадратичную ошибку. Помимо данной модели можно вспомнить так называемую <<гребневую>> регрессию, которая, несмотря на смещение, позволяет строить более устойчивые оценки параметров (см. пример \ref{ridge_and_lasso}).
+\end{example}
+
+Возникает закономерный вопрос: насколько сильно можно уменьшить среднеквадратичное отклонение оценки? Как быстро может убывать дисперсия с ростом размера выборки? Чтобы ответить на эти вопросы, нам придётся ввести некоторые ограничения на нашу вероятностно-статистическую модель, которые называют \textit{условиями регулярности}.
+
+\subsection{Условия регулярности}
+
+Перед тем, как их озвучить, нам понадобится обобщение понятия плотности: по аналогии с непрерывным случаем хотелось бы и для дискретных распределений считать матожидание как интеграл по какой-то одной конкретной мере. Только по какой?
+
+\begin{definition}
+    \textit{Считающей мерой} на $\Z^k$ называется функция $\mu\colon \mathcal{B}(\R^k) \to \N \cup \{+\infty\}$, определённая как
+    \[
+    \mu(B) = \sum_{\mathbf{x} \in \Z^k} I(\mathbf{x} \in B).
+    \]
+\end{definition}
+
+Ясно, что это $\sigma$-конечная мера, и она равна числу целочисленных точек, которое попадает в данное множество, откуда собственно и пошло название. Несложно также понять, как считается интеграл произвольной измеримой функции $f$ по этой мере:
+\[
+\int_{\R^k} f(\mathbf{x})\,\mu(d\mathbf{x}) = \sum_{\mathbf{x} \in \Z^k} f(\mathbf{x}),
+\]
+если, конечно, этот ряд сходится абсолютно. Такое представление позволяет записывать матожидание от дискретных случайных векторов $\xi\colon \Omega \to \Z^k$ через интеграл с плотностью по считающей мере:
+\[
+\me[] g(\xi) = \sum_{\mathbf{x} \in \Z^k} g(\mathbf{x}) \cdot \pth[](\xi = \mathbf{x}) = \int_{\R^k} g(\mathbf{x}) \cdot \rho(\mathbf{x})\,\mu(d\mathbf{x}),
+\]
+где $\rho(\mathbf{x}) = \pth[](\xi = \mathbf{x})$ --- \textit{плотность по мере $\mu$}. Отныне под словами <<плотность по мере $\mu$>> мы будем подразумевать либо обычную плотность, которая у нас была ранее, по классической мере Лебега, либо дискретную по считающей мере. Семейства распределений, у которых есть плотность по одной и той же мере, мы будем называть \textit{доминируемым}.
+
+{
+\footnotesize Данные соображения можно распространить на случай произвольной $\sigma$-конечной меры $\mu$ с помощью теоремы Радона-Никодима.
+
+\begin{definition}
+     Пусть $\mu$ --- некоторая $\sigma$-конечная мера на $\R^n$. Семейство вероятностных мер $\mathcal{P}$ называется \textit{доминируемым} относительно меры $\mu$, если $\forall \mathsf{P} \in \mathcal{P}\colon \mathsf{P} \ll \mu$ (напомним, что $\nu \ll \mu$, если $\forall B\in\R^n\colon \mu(B) = 0 \Rightarrow \nu(B) = 0$). Производную Радона-Никодима $\frac{d\mathsf{P}}{d\mu}$ называют \textit{обобщённой плотностью}.
+\end{definition}
+
+Несложно показать, что выполнена \textit{формула пересчёта}. Она позволяет перейти от интеграла по неизвестной мере к интегралу плотности по известной мере, которая и доминирует семейство:
+\[
+\int_{\R^n} f(\mathbf{x})\,\mathsf{P}(d\mathbf{x}) = \int_{\R^n} f(\mathbf{x}) \cdot \frac{d\mathsf{P}}{d\mu}\,\mu(d\mathbf{x}).
+\]
+}
+
+В различных источниках условия регулярности формулируют по-разному, мы остановимся на следующем варианте.
+
+\begin{regularity*}{}
+\begin{enumerate}[label=C\arabic*]
+\item\label{same_supp} Распределения $\pth$ имеют плотность $\rho_{\theta}(\mathbf{x})$ по некоторой мере $\mu$, носитель которой (т.е. множество $\{x \colon \rho_{\theta}(\mathbf{x}) > 0\}$) не зависит от $\theta$;\\
+\item\label{Theta_is_good} $\Theta$ --- открытое связное множество в $\R$;\\
+\item\label{diff_by_theta} Для любого $\theta \in \Theta$ и для любой статистики $S(\mathbf X)$ с локально ограниченным вторым моментом (то есть $\forall \theta_0 \, \exists \epsilon > 0, c > 0 \, \forall \theta \in B_{\epsilon}(\theta_0)\colon \me[\theta]S(\mathbf X)^2 < c$) выполнено
+\[
+\frac{\partial}{\partial\theta} \me S(\mathbf X) = \me \left(S(\mathbf X)\frac{\partial}{\partial\theta}\ln{\rho_{\theta}(\mathbf X)}\right);
+\]
+\item\label{fisher_inf} Функция $I_{\mathbf X}(\theta) = \me \left(\frac{\partial}{\partial\theta}\ln{\rho_{\theta}(\mathbf X)}\right)^2$ конечна и положительна.
+\end{enumerate}
+\end{regularity*}
+
+Третье условие может ввести в ужас, хотя на самом деле мы всего лишь хотим дифференцировать по параметру $\theta$:
+\begin{gather*}
+\frac{\partial}{\partial\theta} \me S(\mathbf X) = \frac{\partial}{\partial\theta} \int S(\mathbf x) \rho_{\theta}(\mathbf x)\,d\mathbf{x} = \int \frac{\partial}{\partial\theta}\left(S(\mathbf x) \rho_{\theta}(\mathbf x)\right)\,d\mathbf{x} = \int S(\mathbf x) \rho'_{\theta}(\mathbf x)\,d\mathbf{x} = \\
+= \int S(\mathbf x) \frac{\rho'_{\theta}(\mathbf x)}{\rho_{\theta}(\mathbf x)} \rho_{\theta}(\mathbf x)\,d\mathbf{x} = \int \left(S(\mathbf x) \frac{\partial}{\partial \theta}\ln{\rho_{\theta}(\mathbf x)}\right) \rho_{\theta}(\mathbf x)\,d\mathbf{x} = \me \left(S(\mathbf X)\frac{\partial}{\partial\theta}\ln{\rho_{\theta}(\mathbf X)}\right).
+\end{gather*}
+
+Но если остальные условия проверяются относительно легко, выполнение условия \ref{diff_by_theta} установить <<в лоб>> довольно проблематично. Удобным представляется следующее достаточное условие, которое выполнено для широкого класса моделей.
+
+\begin{theorem}{}{}
+    Пусть выполнены условия \ref{same_supp}, \ref{Theta_is_good} и \ref{fisher_inf}, а также известно, что:
+    \begin{enumerate}
+        \item Для $\mu$-п.в. $\mathbf{x}$ функция $\sqrt{\rho_{\theta}(\mathbf{x})}$ непрерывно дифференцируема;
+        \item Функция $I_{\mathbf X}(\theta)$ непрерывна по $\theta$.
+    \end{enumerate}
+
+    Тогда выполнено условие \ref{diff_by_theta}.
+\end{theorem}
+
+Остаётся лишь убедиться в локальной ограниченности второго момента взятой статистики, что обычно весьма просто: например, достаточным условием будет непрерывность второго момента по $\theta$. Далее мы не будем тратить время на то, чтобы удостовериться в выполнении условий регулярности, но для любопытных читателей дан необходимый арсенал для непосредственной проверки.
+
+\subsection{Информация Фишера и эффективность}
+
+Сейчас же важно разобраться с условием \ref{fisher_inf}, а конкретно с введённой там функцией. Она является одной из важнейших характеристик выборки, которая будет встречаться нам ещё не раз.
+
+\begin{definition}
+    Величина $I_{\mathbf X}(\theta)$ называется \textit{информацией Фишера} выборки $\mathbf X$, а величина 
+    \[
+    u_{\theta}(\mathbf X) = \frac{\partial}{\partial\theta}\ln{\rho_{\theta}(\mathbf X)}
+    \]
+    --- \textit{вкладом выборки}. Также удобно использовать информацию Фишера для выборки, состоящей из одного элемента, её обычно обозначают $i(\theta)$.
+\end{definition}
+
+Далее мы постепенно поймём, что эта функция и вправду отражает наше интуитивное понимание термина <<информация>>. Для начала отметим некоторые простые свойства этой величины.
+
+\begin{proposition}\label{fisher_simple}
+    1. Для информации Фишера выполнено тождество
+    \[
+    \me \frac{\partial}{\partial \theta} \ln{\rho_{\theta}(\mathbf X)} = 0.
+    \]
+    2. Информация Фишера аддитивна: для любых независимых выборок $\mathbf X$ и $\mathbf Y$ верно $I_{(\mathbf X, \mathbf Y)}(\theta) = I_{\mathbf X}(\theta) + I_{\mathbf Y}(\theta)$. Как следствие, $I_{\mathbf X}(\theta) = ni(\theta)$, где $i(\theta)$ -- информация, содержащаяся в одном элементе выборки.
+\end{proposition}
+
+\begin{proof}
+    1. Это можно показать, воспользовавшись пунктом \ref{diff_by_theta} из условий регулярности и взяв статистику $S(\mathbf X)\equiv 1$:
+    \[
+    0 = \frac{\partial}{\partial \theta} (1) = \frac{\partial}{\partial \theta} \me 1 = \me \left(1\cdot\frac{\partial}{\partial\theta}\ln{\rho_{\theta}(\mathbf X)}\right).
+    \]
+    Из этого следует, что информацию Фишера можно также записать как дисперсию:
+    \[
+    I_{\mathbf X}(\theta) = \me \left(\frac{\partial}{\partial\theta}\ln{\rho_{\theta}(\mathbf X)}\right)^2 - 0 = \va \left(\frac{\partial}{\partial\theta}\ln{\rho_{\theta}(\mathbf X)}\right).
+    \]
+    
+    2. Воспользуемся линейностью дисперсии для независимых случайных величин:
+    \begin{gather*}
+    I_{(\mathbf X, \mathbf Y)}(\theta) = \va \left(\frac{\partial}{\partial\theta}\ln{\rho_{\theta}(\mathbf X, \mathbf Y)}\right) = \va \left(\frac{\partial}{\partial\theta}\ln{(\rho_{\theta}(\mathbf X)\cdot \rho_{\theta}(\mathbf Y))}\right) =  \\
+    = \va \left(\frac{\partial}{\partial\theta}\ln{\rho_{\theta}(\mathbf X)} +\frac{\partial}{\partial\theta}\ln{\rho_{\theta}(\mathbf Y)}\right) = \va \left(\frac{\partial}{\partial\theta}\ln{\rho_{\theta}(\mathbf X)}\right) +\va \left(\frac{\partial}{\partial\theta}\ln{\rho_{\theta}(\mathbf Y)}\right) = I_{\mathbf X}(\theta) + I_{\mathbf Y}(\theta).
+    \end{gather*}
+\end{proof}
+
+Перейдём к менее очевидным свойствам. Информация Фишера фигурирует в следующем неравенстве на дисперсию оценки.
+
+\begin{theorem}{неравенство Рао-Крамера}{}
+    Для любой несмещённой оценки $\theta^*$ функции $\tau(\theta)$ c локально ограниченным $\me {\theta^*}^2$ и для любого $\theta \in \Theta$ справедливо неравенство
+    \[
+    \va (\theta^*(\mathbf X)) \ge \frac{(\tau'(\theta))^2}{I_{\mathbf X}(\theta)} = \frac{(\tau'(\theta))^2}{ni(\theta)}.
+    \]
+\end{theorem}
+
+\begin{proof}
+    Из условия следует применимость условия \ref{diff_by_theta} регулярности для статистики $\theta^*(\mathbf X)$:
+    \[
+    \tau'(\theta) = \frac{\partial}{\partial \theta} \me \theta^*(\mathbf X) \stackrel{\text{C3}}{=} \me \left(\theta^*(\mathbf X) \frac{\partial}{\partial\theta}\ln{\rho_{\theta}(\mathbf X)}\right) \eqcirc.
+    \]
+    По утверждению \ref{fisher_simple} верно $\me \frac{\partial}{\partial \theta} \ln{\rho_{\theta}(\mathbf X)} = 0$. Прибавим эту величину, домноженную на $\tau(\theta)$, к правой части равенства сверху:
+    \[
+    \eqcirc \me \left(\theta^*(\mathbf X) \frac{\partial}{\partial\theta}\ln{\rho_{\theta}(\mathbf X)}\right) - \tau(\theta) \cdot \me \left(\frac{\partial}{\partial\theta}\ln{\rho_{\theta}(\mathbf X)}\right) = \me \left([\theta^*(\mathbf X) - \tau(\theta)] \frac{\partial}{\partial\theta}\ln{\rho_{\theta}(\mathbf X)}\right).
+    \]
+    Это было сделано для того, чтобы применить неравенство Коши-Буняковского.
+    \[
+    \tau'(\theta)^2 \le \me \left(\theta^*(\mathbf X) - \tau(\theta)\right)^2 \cdot \me \left(\frac{\partial}{\partial\theta}\ln{\rho_{\theta}(\mathbf X)}\right)^2 = \va \theta^*(\mathbf X) \cdot I_{\mathbf X}(\theta),
+    \]
+    что и требовалось.
+\end{proof}
+
+С одной стороны, неравенство Рао-Крамера приводит нас к пессимистичному выводу: в условиях регулярности наилучший порядок убывания дисперсии несмещённой оценки есть $1/n$. Но с другой стороны, оно даёт нам чёткий пример для подражания, на который нам стоит ориентироваться при составлении оценок. В некоторых случаях удаётся выжать максимум в этом направлении.
+
+\begin{definition}
+    Оценка $\theta^*$ называется \textit{эффективной}, если для неё выполнено равенство в неравенстве Рао-Крамера.
+\end{definition}
+
+Появляется резонное желание понять, а когда наша оценка имеет наименьшую дисперсию, которую позволяет нам неравенство выше. Его удовлетворяет следующая
+
+\begin{theorem}{критерий эффективности}{}
+    Оценка $\theta^*$ эффективна тогда и только тогда, когда для любого $\theta \in \Theta$ выполнено
+    \[
+    \theta^*(\mathbf X) - \tau(\theta) = \frac{\tau'(\theta)(\ln{\rho_{\theta}(\mathbf X)})'_{\theta}}{I_{\mathbf X}(\theta)}.
+    \]
+\end{theorem}
+
+% \begin{proof}
+    
+% \end{proof}
+
+Но не спешите радоваться: отнюдь не любое семейство распределений позволяет иметь эффективную оценку. Впрочем, есть критерий, дающий понять, для какого класса семейств она имеется, и он весьма широк:
+
+\begin{definition}
+    Семейство $\{\mathsf P_{\theta}\}$, где $\theta = (\theta_1, \ldots, \theta_k)$, принадлежит \textit{экспоненциальному классу распределений}, если обобщённая плотность распределения $\pth$ имеет вид
+    \[
+    \rho_{\theta}(\mathbf{x}) = g(\mathbf{x}) \exp\left(a_0(\theta)+\sum_{i=1}^{k} a_i(\theta) T_i(\mathbf{x})\right).
+    \]
+\end{definition}
+
+\begin{example}
+    Экспоненциальному классу распределений принадлежат многие семейства, которые мы рассматривали ранее. Приведём лишь некоторые из них.
+    \begin{itemize}
+        \item $X_i \sim \mathcal N(a, \sigma^2)$. $$\rho_{(a, \sigma^2)}(x) = \frac{1}{\sqrt{2\pi\sigma^2}}\exp\left(-\frac{(x - a)^2}{2\sigma^2}\right) = \exp\left(\smash{\underbrace{\left(\frac{1}{2}\ln{\frac{1}{2\pi\sigma^2}} - \frac{a^2}{2\sigma^2}\right)}_{= a_0(a, \sigma^2)}} - \frac{1}{2\sigma^2} \cdot x^2 + \frac{a}{\sigma^2} \cdot x\right).$$
+        
+        Таким образом, $T_1(x)=x$, $T_2(x)=x^2$.
+        \item $X_i \sim \expd(\lambda)$.
+        \[
+        \rho_{\lambda}(x) = \lambda e^{-\lambda x} I(x > 0) = I(x>0)\cdot \exp(\ln{\lambda} - \lambda x),
+        \]
+        и тогда $T_1(x) = x$.
+        
+        \item $X_i \sim \Gamma(\alpha, \lambda)$.
+        \[
+        \rho_{(\alpha, \lambda)}(x) = \frac{\lambda^{\alpha}x^{\alpha-1}}{\Gamma(\alpha)}e^{-\lambda x}I(x > 0) = I(x > 0) \cdot \exp\bigl((\alpha\ln\lambda - \ln{\Gamma(\alpha)) - \lambda x + (\alpha - 1)\ln{x}}\bigr).
+        \]
+        В данном случае $T_1(x)=x$, $T_2(x)=\ln{x}$.
+        \item $X_i \sim \betad(\alpha, \beta)$.
+        \begin{gather*}
+            \rho_{(\alpha, \beta)}(x) = \frac{x^{\alpha - 1}(1-x)^{\beta - 1}}{B(\alpha, \beta)}I(0 < x < 1) = \\
+            = I(0 < x < 1)\cdot  \exp\bigl(-\ln{B(\alpha, \beta)} + (\alpha - 1)\ln{x} + (\beta - 1)\ln{(1 - x)} \bigr)
+        \end{gather*}
+        Получаем $T_1(x)=\ln{x}$, $T_2(x)=\ln{(1-x)}$
+        \item Рассмотрим теперь дискретные распределения. $X_i \sim \bernd(p)$. В данном случае обобщённая плотность имеет вид
+        \[
+        \rho_{p}(x) = \left\{
+        \begin{aligned}
+            &p, &x = 0\\
+            &1-p, &x = 1
+        \end{aligned}
+        \right.
+        \]
+        Для удобства её лучше представить как
+        \[
+        \rho_{p}(x) = p^x(1-p)^{1-x} = \exp(x\ln{p} + (1 - x)\ln{(1-p)}) = \exp\left(\ln{(1 - p)} + x\ln{\frac{p}{1-p}}\right)
+        \]
+        Тогда $T_1(x) = x$.
+        \item $X_i \sim \poisd(\lambda)$. 
+        \[
+        \rho_{\lambda}(x) = \frac{\lambda^x e^{-\lambda}}{x!} = \frac{1}{x!} \exp(-\lambda + x \ln{\lambda}),
+        \]
+        и тогда $T_1(x) = x$.
+    \end{itemize}
+\end{example}
+
+\begin{theorem}[label=est_for_exp]{}{}
+    Пусть $\theta \subset \R$. Тогда эффективная оценка существует только для экспоненциальных семейств. Более того, в этом случае $\theta^*(\mathbf X) = \overline{T(\mathbf X)}$ является эффективной оценкой для $-a_0'(\theta) / a_1'(\theta)$, а любая другая эффективная оценка будет линейной функцией от $\theta^*(\mathbf X)$.
+\end{theorem}
+
+\begin{example}
+    Пусть $\mathbf X = (X_1, \ldots, X_n)$ --- выборка из $\poisd(\lambda)$. Информацию Фишера для неё можно найти напрямую, взяв интеграл из определения $i(\lambda)$ (и тем самым мы честно покажем, что выполняются условия регулярности).
+    \begin{gather*}
+        i(\lambda) = \me[\lambda] \left(\frac{\partial}{\partial \lambda} \ln{\rho_{\lambda}(X_1)} \right)^2 = \sum_{k=0}^{\infty} \left(\frac{\rho_{\lambda}'(k)}{\rho_{\lambda}(k)}\right)^2 \cdot \rho_{\lambda}(k) = \sum_{k=0}^{\infty} \left(\frac{k}{\lambda} - 1\right)^2 \cdot \frac{e^{-\lambda} \cdot \lambda^k}{k!} = \\
+        = 1 + e^{-\lambda}\cdot \sum_{k=1}^{\infty} \left(\frac{k\lambda^{k-2}}{(k-1)!} - \frac{2\lambda^{k-1}}{(k-1)!}\right) = 1 - 2 + e^{-\lambda}\cdot \sum_{k=1}^{\infty}\left(\frac{(k-1)\lambda^{k-2}}{(k-1)!} + \frac{\lambda^{k-2}}{(k-1)!}\right) = \frac{1}{\lambda}.
+    \end{gather*}
+    Поэтому если мы хотим несмещённо оценить $\tau(\lambda) = \lambda$, то нижняя оценка на дисперсию окажется равной
+    \[
+    \frac{\tau'(\lambda)}{ni(\lambda)} = \frac{\lambda}{n}.
+    \]
+    
+    К счастью, естественная оценка $\lambda^*(\mathbf X) = \overline{\mathbf X}$ имеет ровно такую дисперсию:
+    \[
+    \va \overline{\mathbf X} = \frac{1}{n^2} \sum \va X_i = \frac{\lambda}{n}.
+    \]
+    Таким образом, $\overline{\mathbf X}$ является эффективной оценкой.
+    
+    Однако можно поступить и проще. Из примера выше мы знаем, что это семейство принадлежит экспоненциальному классу распределений с $T(\mathbf{x}) = \sum x_i$, $a_0(\lambda) = -\lambda$ и $a_1(\lambda) = \ln{\lambda}$. Тогда по теореме выше оценка $\lambda^*(\mathbf X) = \overline{\mathbf X}$ является эффективной оценкой функции
+    \[
+    -\frac{a_0'(\lambda)}{a_1'(\lambda)} = -\frac{-1}{1/\lambda} = \lambda.
+    \]
+
+    Более того, по критерию эффективности можно легко найти информацию Фишера.
+    \[
+    i(\lambda) = \frac{\tau'(\lambda)\cdot (\ln{\rho_{\lambda}(x)})'_{\lambda}}{\lambda^* - \tau(\lambda)} = \frac{1 \cdot (-\lambda + x\ln{\lambda} - \ln{x!})'_{\lambda}}{x - \lambda} = \frac{x / \lambda - 1}{x - \lambda} = \frac{1}{\lambda}.
+    \]
+    
+\end{example}
+
+\subsection{Многомерный случай}
+
+Посмотрим теперь, как можно обобщить введённую нами теорию на многомерный случай. Пусть теперь $\Theta$ --- открытое множество в $\R^k$, и $\theta = (\theta_1, \ldots, \theta_k) \in \Theta$. Информация Фишера есть дисперсия вклада выборки, а, как мы знаем из теории вероятности, аналогом дисперсии в многомерном пространстве служит ковариационная матрица.
+
+\begin{definition}
+    Матрица ковариаций вклада выборки
+    \[
+    I_{ij}(\theta) = \me \left( \frac{\partial}{\partial \theta_i} \ln\rho_{\theta}(\mathbf X) \cdot \frac{\partial}{\partial \theta_j} \ln\rho_{\theta}(\mathbf X) \right)
+    \]
+    называется \textit{информационной матрицей}.
+\end{definition}
+
+Полученные нами результаты довольно естественно обобщаются на случай многомерного параметра. Однако для их корректности нужно уточнить условие \ref{fisher_inf}, потребовав $\det{I_{\mathbf X}(\theta)} > 0$, чтобы матрицу можно было обращать.
+
+\begin{theorem}{неравенство Рао-Крамера в многомерном случае}{}
+    Для любой несмещённой оценки $\theta^*$ для $\tau(\theta)$ c локально ограниченным $\me {\theta^*_i}^2$ и для любого $\theta \in \Theta$ справедливо неравенство
+    \[
+     \va\theta^*(\mathbf X) \ge \frac{\partial \tau}{\partial \theta} I^{-1}_{\mathbf X}(\theta) \left(\frac{\partial \tau}{\partial \theta}\right)^T.
+    \]
+    Неравенство $A \ge B$ двух симметричных матриц $A$ и $B$ понимают как неотрицательную определённость матрицы $A - B$.
+\end{theorem}
+
+\begin{theorem}{критерий эффективности в многомерном случае}{}
+    Оценка $\theta^*$ эффективна тогда и только тогда, когда для любого $\theta \in \Theta$
+    \[
+    \theta^*(\mathbf X) - \tau(\theta) = \tau'(\theta) I^{-1}_{\mathbf X}(\theta) (\ln{\rho_{\theta}(\mathbf X)})'_{\theta}.
+    \]
+\end{theorem}
+
+\begin{example}\label{fisher_norm}
+    Пусть $\mathbf X = (X_1, \ldots, X_n)$ --- выборка из нормального распределения с параметрами $\theta = (a, \sigma^2)$. Для начала рассмотрим одномерные случаи, когда один из параметров известен, а второй --- нет.
+    
+    Пусть параметр $\sigma^2$ известен, а неизвестный параметр $a$ необходимо оценить (то есть рассматривается модель сдвига). Имеем $$\rho_{a}(x) = \frac{1}{\sqrt{2\pi\sigma^2}}\exp\left(-\frac{(x - a)^2}{2\sigma^2}\right) = \exp\left(- \frac{1}{2\sigma^2}x^2\right)\cdot \exp\left(\left(\frac12\ln{\frac{1}{2\pi\sigma^2}} - \frac{a^2}{2\sigma^2}\right) + \frac{a}{\sigma^2}x\right).$$
+    Следовательно, наша модель принадлежит экспоненциальному семейству, а значит, по теореме \ref{est_for_exp} $\overline{T_1(\mathbf X)}=\overline{\mathbf X}$ является эффективной оценкой для
+    $$-\frac{a_0'(a)}{a_1'(a)} = \left.-\left(\frac12\ln{\frac{1}{2\pi\sigma^2}} - \frac{a^2}{2\sigma^2}\right)'_a \right/ \left(\frac{a}{\sigma^2}\right)'_a = a.$$
+    Для разнообразия посчитаем информацию одного наблюдения по определению, это нам пригодится позднее:
+    \[
+    i(a) = \va[a] \left(\frac{\partial}{\partial a} \ln{\rho_{a}(X_1)}\right) = \va[a] \left(\frac{X_1 - a}{\sigma^2}\right) = \va \frac{X_1}{\sigma^2} = \frac{1}{\sigma^4}\va[a] X_1 = \frac{1}{\sigma^2}.
+    \]
+    
+    Теперь будем считать, что $a$ известно, а дисперсия $\sigma^2$ --- нет (такая модель называется моделью масштаба). Она всё ещё лежит в экспоненциальном семействе:
+    \[
+    \rho_{\sigma^2}(x) = \exp\left(-\frac12\ln{2\pi\sigma^2} - \frac{1}{2\sigma^2}(x - a)^2\right).
+    \]
+    По теореме имеется эффективная оценка $\widehat{\sigma^2} = \overline{(\mathbf X-a)^2}$ для
+    $$\left.\tau(\sigma^2) = \left(\frac{1}{2}\ln{2\pi\sigma^2}\right)'_{\sigma^2} \right/ \left(\frac{-1}{2\sigma^2}\right)'_{\sigma^2} = \frac{2\pi}{4\pi\sigma^2}\cdot 2\sigma^4 = \sigma^2.$$
+    Из критерия эффективности для одноэлементной выборки
+    \[
+    i(\sigma^2) = \frac{\tau'(\sigma^2)\cdot (\ln{\rho_{\sigma^2}(X_1)})'_{\sigma^2}}{\widehat{\sigma^2} - \tau(\sigma^2)} = \frac{1 \cdot \left(\frac{-1}{2\sigma^2}+\frac{(X_1-a)^2}{2\sigma^4}\right)}{(X_1-a)^2 - \sigma^2} = \frac{1}{2\sigma^4}.
+    \]
+    Теперь попробуем найти эффективные оценки для различных функций от вектора параметров. Начнём с функции $\tau(a, \sigma^2) = (a, a^2 + \sigma^2)$. Во-первых, найдём вклад выборки:
+    \[
+    \frac{\partial}{\partial a} \ln{\rho(\mathbf X)} = \sum \frac{X_i - a}{\sigma^2},\;\;\;
+    \frac{\partial}{\partial \sigma^2} \ln{\rho(\mathbf X)} = -\frac{n}{2\sigma^2} + \sum \frac{(X_i-a)^2}{2\sigma^4}.
+    \]
+    Нахождение информационной матрицы упрощается тем, что на её диагонали стоят $\mathsf{cov}\left(\frac{\partial}{\partial a} \ln{\rho(\mathbf X)}, \frac{\partial}{\partial a} \ln{\rho(\mathbf X)}\right) = I_{\mathbf X}(a) = \frac{n}{\sigma^2}$ и $\mathsf{cov}\left(\frac{\partial}{\partial \sigma^2} \ln{\rho(\mathbf X)}, \frac{\partial}{\partial \sigma^2} \ln{\rho(\mathbf X)}\right) = I_{\mathbf X}(\sigma^2) = \frac{n}{2\sigma^4}$, которые мы посчитали ранее. С остальными элементами матрицы нам не очень повезло:
+    \begin{gather*}
+        \mathsf{cov}\left(\frac{\partial}{\partial a} \ln{\rho(\mathbf X)}, \frac{\partial}{\partial \sigma^2} \ln{\rho(\mathbf X)}\right) = \\
+        = \mathsf{cov}\left(\sum \frac{X_i - a}{\sigma^2}, -\frac{n}{2\sigma^2} + \frac{1}{2\sigma^4}\left(\sum X_i^2 - 2a\sum X_i + na^2\right)\right) \eqcirc
+    \end{gather*}
+    Заметим, что ковариация с константой равна 0, а значит, вынося множители за знак ковариации:
+    \begin{gather*}
+        \eqcirc \frac{1}{2\sigma^6}\mathsf{cov}\left(\sum X_i, \sum X_i^2 - 2a\sum X_i\right) = \\
+        = \frac{1}{2\sigma^6}\mathsf{cov}\left(\sum X_i, \sum X_i^2\right) - \frac{a}{\sigma^6}\mathsf{cov}\left(\sum X_i, \sum X_i\right) \eqcirc
+    \end{gather*}
+    Вспоминаем, что элементы выборки независимы, а в сумме выше выживают лишь ковариации по одинаковым индексам:
+    \[
+    \eqcirc
+    \frac{1}{2\sigma^6}\sum \mathsf{cov}\left(X_i, X_i^2\right) - \sum\frac{a}{\sigma^6}\mathsf{cov}\left(X_i, X_i\right) = \frac{n}{2\sigma^2}(\me X_1^3 - \me X_1 \cdot \me X_1^2 - 2a\va X_1) \eqcirc
+    \]
+    Несложно посчитать, что $\me X_1^3 = a^3 + 3a\sigma^2$. Поэтому
+    \[
+    \eqcirc \frac{n}{2\sigma^2}(a^3+3a\sigma^2 - a(\sigma^2 + a^2) - 2a\sigma^2) = 0.
+    \]
+    Находим матрицу Якоби для $\tau(a, \sigma^2) = (a, a^2 + \sigma^2)$, обращаем информационную матрицу $I_{\mathbf X}(\theta)$ (благо это нетрудно) и считаем ответ, воспользовавшись критерием эффективности:
+    \begin{gather*}
+    \theta^* = \tau(\theta) + \tau'(\theta) I^{-1}_{\mathbf X}(\theta) (\ln{\rho_{\theta}(\mathbf X)})'_{\theta} = \\ 
+    = \begin{pmatrix}a\\a^2+\sigma^2
+    \end{pmatrix} + 
+    \begin{pmatrix}
+    1 & 0\\
+    2a & 1
+    \end{pmatrix}
+    \begin{pmatrix}
+    \frac{\sigma^2}{n} & 0\\
+    0 & \frac{2\sigma^4}{n}
+    \end{pmatrix}
+    \begin{pmatrix}
+    \sum \frac{X_i - a}{\sigma^2}\\
+    -\frac{n}{2\sigma^2} + \sum \frac{(X_i-a)^2}{2\sigma^4}
+    \end{pmatrix} = \\
+    = \begin{pmatrix}a\\a^2+\sigma^2
+    \end{pmatrix} + 
+    \begin{pmatrix}
+    \frac{\sigma^2}{n} & 0\\
+    \frac{2a\sigma^2}{n} & \frac{2\sigma^4}{n}
+    \end{pmatrix}
+    \begin{pmatrix}
+    \frac{n}{\sigma^2}(\overline{\mathbf X} - a)\\
+    -\frac{n}{2\sigma^2} + \frac{n}{2\sigma^4}\left(\overline{\mathbf X^2} - 2a\overline{\mathbf X} + a^2\right)
+    \end{pmatrix} =\\
+    = \begin{pmatrix}a\\a^2+\sigma^2
+    \end{pmatrix} + 
+    \begin{pmatrix}
+    \overline{\mathbf X} - a\\
+    \overline{\mathbf X^2} - \sigma^2 - a^2
+    \end{pmatrix} = \begin{pmatrix}
+    \overline{\mathbf X}\\
+    \overline{\mathbf X^2}.
+    \end{pmatrix}
+    \end{gather*}
+
+    Однако нам, конечно, хотелось бы найти эффективную оценку для вектора $(a, \sigma^2)$. К сожалению, такой просто не существует. Действительно, предположим, что такая оценка $\theta^*$ существует. Тогда по критерию эффективности
+    \[
+    \theta^* = \begin{pmatrix}a\\\sigma^2\end{pmatrix}+
+    \begin{pmatrix}
+    \frac{\sigma^2}{n} & 0\\
+    0 & \frac{2\sigma^4}{n}
+    \end{pmatrix}
+    \begin{pmatrix}
+    \frac{n}{\sigma^2}(\overline{\mathbf X} - a)\\
+    -\frac{n}{2\sigma^2} + \frac{n}{2\sigma^4}\left(\overline{\mathbf X^2} - 2a\overline{\mathbf X} + a^2\right)
+    \end{pmatrix} = \begin{pmatrix}
+    \overline{\mathbf X}\\
+    \overline{\mathbf X^2} - 2a\overline{\mathbf X} + a^2
+    \end{pmatrix}.
+    \]
+    Полученная функция не является статистикой, так как имеется явная зависимость от параметра. Значит, эффективной оценки вектора параметров для данной модели не существует.
+\end{example}
+
+\subsection{Информация Фишера для статистик}\label{stat_information}
+
+% TODO Привести примеры и добавить ещё свойств
+
+Пусть $S(\mathbf X)$ --- статистика, у которой обобщённая плотность по мере $\mu$ равна $g_{\theta}(s)$.
+
+\begin{definition}
+    Информацией Фишера статистики $S(\mathbf X)$ называется величина
+    $$I_S(\theta) = \me\left( \frac{\partial}{\partial \theta }\ln{g_{\theta}(S(\mathbf X))}\right)^2.$$
+\end{definition}
+
+Для удобства потребуем выполнения условия регулярности $$\frac{\partial}{\partial \theta} \me T(\mathbf X) = \me \left(T(\mathbf X)\frac{\partial}{\partial \theta }\ln{g_{\theta}(S(\mathbf X))}\right)$$
+для любой $S(\mathbf X)$-измеримой статистики $T(\mathbf X)$ с ограниченным вторым моментом.
+
+Рассмотрим ещё одно свойство информации Фишера, которое дополнительно оправдывает её пафосное название, а также подводит нас к теме одного из следующих параграфов. Давайте поймём, как связана информация Фишера введённой нами статистики и информация всей выборки.
+
+\begin{theorem}{}{}
+    В условиях регулярности для статистики $S(\mathbf X)$ выполняется неравенство $I_{S}(\theta) \le I_{\mathbf X}(\theta)$ для любого $\theta \in \Theta$.
+\end{theorem}
+
+\begin{proof}
+Ключевым наблюдением здесь является то, что
+$$\me \left(\left.\frac{\partial}{\partial \theta}\ln{\rho_{\theta}(\mathbf X)}\right|S(\mathbf X)\right) = \frac{\partial}{\partial \theta }\ln{g_{\theta}(S(\mathbf X))}.$$
+
+Действительно, данное тождество можно проверить по определению УМО. Статистика $\frac{\partial}{\partial \theta }\ln{g_{\theta}(S(\mathbf X))}$ будет $S(\mathbf X)$-измеримой как функция от $S(\mathbf X)$, и по условиям регулярности для любого $C \in \sigma(S(\mathbf X))$:
+\[
+    \me \left(I(\mathbf X \in C)\frac{\partial}{\partial \theta }\ln{g_{\theta}(S(\mathbf X))}\right) = \frac{\partial}{\partial \theta} \me I(\mathbf X \in C) = \me \left(I(\mathbf X \in C)\frac{\partial}{\partial \theta }\ln{\rho_{\theta}(\mathbf X)}\right).
+\]
+С помощью полученного равенства перепишем информацию Фишера для статистики $S(\mathbf X)$:
+\begin{gather*}
+    I_S(\theta) = \me \left(\frac{\partial}{\partial \theta }\ln{g_{\theta}(S(\mathbf X))} \cdot \me \left(\left.\frac{\partial}{\partial \theta}\ln{\rho_{\theta}(\mathbf X)}\right|S(\mathbf X)\right)\right) \eqcirc
+    \end{gather*}
+По свойству УМО можно занести $S(\mathbf X)$-измеримую $\frac{\partial}{\partial \theta }\ln{g_{\theta}(S(\mathbf X))}$ под знак УМО, а потом воспользоваться формулой полного матожидания:
+\begin{gather*}
+    \eqcirc \me \left[\me \left(\left.\frac{\partial}{\partial \theta }\ln{g_{\theta}(S(\mathbf X))} \cdot \frac{\partial}{\partial \theta}\ln{\rho_{\theta}(\mathbf X)} \right|S(\mathbf X)\right)\right] = \me \left(\frac{\partial}{\partial \theta }\ln{g_{\theta}(S(\mathbf X))} \cdot \frac{\partial}{\partial \theta}\ln{\rho_{\theta}(\mathbf X)} \right) \lecirc
+\end{gather*}
+Наконец, неравенство Коши-Буняковского даёт нам искомый результат:
+\[
+    \lecirc \sqrt{\me\left( \frac{\partial}{\partial \theta}\ln{\rho_{\theta}(\mathbf X)}\right)^2\cdot \me\left(\frac{\partial}{\partial \theta }\ln{g_{\theta}(S(\mathbf X))}\right)^2} = \sqrt{I_{\mathbf X}(\theta)\cdot I_S(\theta)} \Longrightarrow I_S(\theta) \le I_{\mathbf X}(\theta).
+\]
+\end{proof}
+
+
+Мы получили очень любопытный результат: если мы \textit{редуцируем} данные и рассматриваем не всю выборку $\mathbf X$, а лишь статистику от неё $S(\mathbf X)$, то информация Фишера либо остаётся той же, либо уменьшается, что соответствует нашим ожиданиям. Это в очередной раз подтверждает, что $I_{\mathbf X}(\theta)$ является показательной мерой того, насколько много данных содержится в выборке.
+
+Но возникает вопрос: а когда достигается равенство? Так как при доказательстве мы использовали неравенство Коши-Буняковского, то равенство будет достигаться, если $\frac{\partial}{\partial \theta}\ln{\rho_{\theta}(\mathbf X)}$ и $\frac{\partial}{\partial \theta }\ln{g_{\theta}(S(\mathbf X))}$ будут линейно зависимыми почти наверное. Но как мы знаем, одно есть УМО от другого, поэтому они обязаны почти наверное совпадать, то есть для каждого $\theta \in \Theta$ 
+\[
+\frac{\partial}{\partial \theta}\ln{\rho_{\theta}(\mathbf X)} \stackrel{\pth\text{-п.н.}}{=} \frac{\partial}{\partial \theta }\ln{g_{\theta}(S(\mathbf X))}.
+\]
+Стало быть, выражения под знаками $\frac{\partial}{\partial \theta}$ отличаются на константу, не зависящую от $\theta$ (но может быть от $\mathbf X$), то есть
+\[
+\ln{\rho_{\theta}(\mathbf X)} = \ln{g_{\theta}(S(\mathbf X))} + c(\mathbf X),
+\]
+\begin{equation}\label{factor}
+    \rho_{\theta}(\mathbf X) = g_{\theta}(S(\mathbf X))\cdot h(\mathbf X).
+\end{equation}
+Итог: только статистики $S(\mathbf X)$, которые удовлетворяют равенству (\ref{factor}), сохраняют информацию при редуцировании данных. Из-за подобного свойства при <<сжатии данных>> эти статистики представляют особый интерес с практической точки зрения. Мы рассмотрим их подробнее в параграфе \ref{sufficiency}.
+
+\subsection{Геометрический смысл}
+
+Закончим обсуждение информации Фишера новым взглядом на сию величину. Ранее мы множество раз убедились, что она характеризует количество информации, которая в пределе даёт нам выборка. Теперь же посмотрим на неё с точки зрения геометрии пространства нашей модели.
+
+Как можно было бы мерить расстояние между распределениями взятого нами параметрического семейства? Первое, что приходит в голову, --- использовать расстояние между соответствующими параметрами. Однако данный подход имеет множество недостатков: он зависит от конкретной параметризации и в принципе не всегда отражает наши представления о метрике. Например, явственно видно, что степень расхождения между распределениями $\mathcal{N}(0, 1)$ и $\mathcal{N}(1, 1)$ гораздо выше, чем между $\mathcal{N}(0, 100)$ и $\mathcal{N}(1, 100)$, хотя в смысле параметров сдвига и масштаба $(\mu, \sigma)$ расстояния для данных пар равны.
+
+Другой подход --- использовать расстояния непосредственно между самими распределениями. Распространённым примером такого <<расстояния>> является дивергенция Кульбака-Лейблера, которая для распределений с плотностями $p(\mathbf x)$ и $q(\mathbf x)$ по мере $\mu$ равна
+\[
+KL(p || q) = \int_{\R^n} p(\mathbf x) \cdot \ln\left(\frac{p(\mathbf x)}{q(\mathbf x)}\right)\,\mu(d\mathbf x).
+\]
+
+К сожалению, в прямом смысле данная величина метрикой не является, но она всё равно довольно хорошо показывает разницу между распределениями, что видно уже в случае нормального семейства (см. задачу \ref{kl_normal}). Посмотрим, как она ведёт себя локально, когда распределения отличаются не слишком сильно. Для этого дважды продифференцируем $KL$-дивергенцию двух распределений $\rho_{\boldtheta}$ и $\rho_{\boldtheta'}$, где первый параметр $\boldtheta$ фиксирован, а по второму, $\boldtheta'$, мы и будем дифференцировать:
+\[
+\nabla_{\boldtheta'} KL(\rho_{\boldtheta} || \rho_{\boldtheta'}) = \nabla_{\boldtheta'} \int_{\R^n} \rho_{\boldtheta}(\mathbf x) \cdot \ln \rho_{\boldtheta}(\mathbf x)\,\mu(d\mathbf x) - \nabla_{\boldtheta'} \int_{\R^n} \rho_{\boldtheta}(\mathbf x) \cdot \ln \rho_{\boldtheta'}(\mathbf x)\,\mu(d\mathbf x) =
+\]
+\[
+= - \int_{\R^n} \rho_{\boldtheta}(\mathbf x) \cdot \nabla_{\boldtheta'} \ln \rho_{\boldtheta'}(\mathbf x)\,\mu(d\mathbf x)
+\]
+\[
+\nabla^2_{\boldtheta'} KL(\rho_{\boldtheta} || \rho_{\boldtheta'}) = - \int_{\R^n} \rho_{\boldtheta}(\mathbf x) \cdot \nabla^2_{\boldtheta'} \ln \rho_{\boldtheta'}(\mathbf x)\,\mu(d\mathbf x).
+\]
+Для $\boldtheta'=\boldtheta$ первое выражение, градиент $KL$-дивергенции, равно нулю в силу условий регулярности, что вообще-то не сильно впечатляет --- в этой точке $KL$-дивергенция равна минимальному значению, нулю, ибо два распределения совпадают. Второе же выражение, гессиан $KL$-дивергенции, более интересно, потому что согласно задаче \ref{fisher-inf-is-second-derivative} оно в точности равно информационной матрице Фишера в точке $\boldtheta$. Иначе говоря, информация Фишера описывает локальную кривизну пространства распределений, в котором в качестве метрики взята $KL$-дивергенция:
+\[
+KL(\rho_{\boldtheta} || \rho_{\boldtheta + \Delta}) = \Delta^T I_{\mathbf X}(\boldtheta) \Delta + o(\|\Delta\|^2).
+\]
+
+В частности, её можно рассматривать как I квадратичную форму, которая превращает параметрическое семейство распределений в риманово многообразие, что, однако, уже выходит за рамки сего текста. Отметим лишь пример применения наблюдений выше --- модификацию градиентного спуска при нахождения максимума правдоподобия (см. раздел \ref{NGD}).
+
+\subsection*{Задачи}
+
+\begin{problem}
+	В модели сдвига-масштаба стандартного распределения Коши,
+	\[
+	\{\cauchyd(a, \sigma)\colon a \in \R, \sigma \in \R_+\},
+	\]
+	найдите информационную матрицу Фишера.
+\end{problem}
+
+\begin{problem}\label{fisher-inf-is-second-derivative}
+	Докажите, что если в дополнение к условиям регулярности добавить равенства
+	\[
+	\int \frac{\partial}{\partial \theta_i \partial \theta_j}\rho_{\boldtheta}''(\mathbf{x})\,d\mathbf{x} = 0
+	\]
+	(в частности, это верно, если интеграл плотности дважды дифференцируем по параметру), то информацию Фишера можно представить как
+	\[
+	I_{\mathbf X}(\boldtheta)_{ij} = - \me[\boldtheta] \frac{\partial^2 \ln{\rho_{\boldtheta}(\mathbf X)}}{\partial \theta_i \partial \theta_j}.
+	\]
+\end{problem}
+
+\begin{problem}\label{kl_normal}
+	Посчитайте $KL$-дивергенцию между двумя нормальными распределениями $\mathcal{N}(\mu_1, \sigma_1^2)$ и $\mathcal{N}(\mu_2, \sigma_2^2)$.
+\end{problem}
+
+
+
+
+
+

@@ -1,0 +1,530 @@
+\section{Оценка максимального правдоподобия}\label{mle}
+
+\begin{wrapfigure}{l}{0.4\textwidth}
+    \includegraphics[width=0.4\textwidth]{pic/mle/mle.pdf}
+\end{wrapfigure}
+
+Данный метод был широко популяризирован известным статистиком Рональдом Фишером и обладает множеством любопытных свойств. Но для них нужно потребовать выполнения некоторых условий в нашей модели, поэтому сначала поговорим о мотивации такой оценки и рассмотрим примеры.
+
+Идея ОМП проста: давайте среди всех возможных распределений возьмём то, при котором вероятность лицезреть именно такую выборку наиболее высокая, то есть наблюдение наиболее правдоподобно.
+
+\begin{definition}
+Пусть $\mathcal{P} = \{\pth\colon \theta \in \Theta\}$ --- доминируемое семейство распределений $\pth$ с плотностью $\rho_{\theta}(x)$. \textit{Функцией правдоподобия} выборки $X_1, \ldots, X_n$ называется плотность их совместного распределения, взятая от элементов выборки:
+\[
+f_{\theta}(X_1, \ldots, X_n) = \rho_{\theta}(X_1)\ldots \rho_{\theta}(X_n).
+\]
+Величина
+\[
+L_{\theta}(X_1, \ldots, X_n) = \ln{f_{\theta}(X_1, \ldots, X_n)}
+\]
+называется \textit{логарифмической функцией правдоподобия}.
+
+\textit{Оценкой максимального правдоподобия} параметра $\theta$ называется статистика 
+\[
+\widehat{\theta}(\mathbf X) = \argmax_{\theta \in \Theta} f_{\theta}(X_1, \ldots, X_n)
+\]
+\end{definition}
+
+Заметим, что точки максимума функции правдоподобия и её логарифмического брата-близнеца совпадают в силу монотонности логарифма, поэтому максимизировать можно любую из этих функций. Второй вариант обычно предпочтительнее, так как минимизировать сумму гораздо проще, чем произведение.
+
+{\small
+Может показаться, что такая оценка кардинально отличается от предыдущих, получаемых методом подстановки. Однако это не так, и ОМП можно задать как функционал от эмпирического распределения, который минимизирует <<расстояние>> между распределениями. Вероятно, это <<расстояние>> покажется знакомым, так как оно тесно связано с расстоянием Кульбака-Лейблера, которое имеет широкое применение в статистике и машинном обучении.
+
+\begin{definition}
+    Пусть $\mathsf{P}$ --- вероятностная мера с обобщённой плотностью $p$, а $\mathsf{Q}$ --- произвольное распределение. Введём величину, называемую \textit{кросс-энтропией}
+    \[
+    d(\mathsf{P}, \mathsf{Q}) = -\int \ln{p(x)}\,\mathsf{Q}(dx). 
+    \]
+\end{definition}
+
+Мы называем её <<расстоянием>>, потому что эта функция не является метрикой (она даже не симметрична), однако она хорошо показывает похожесть распределений. Посему логично рассмотреть функционал
+\[
+G(\mathsf{Q}) = \argmin_{\theta \in \Theta} d(\pth, \mathsf{Q})
+\]
+
+Если $\mathsf{Q} = \pth$, то функционал будет равен $\theta$, что гарантирует следующее
+
+\begin{proposition}
+    Если $\mathsf{P}$, $\mathsf{Q}$ --- два доминируемых относительно $\mu$ распределения с плотностями $p$ и $q$ соответственно, то выполнено неравенство
+    \[
+    d(\mathsf{P}, \mathsf{P}) \le d(\mathsf{Q}, \mathsf{P})
+    \]
+    причём равенство достигается тогда и только тогда, когда $\mu$-п.н. выполнено $p = q$.
+\end{proposition}
+
+\begin{proof}
+    Как известно, $\ln{(1+x)} \le x$ при $x > -1$. Тогда выполнено неравенство
+    \[
+    \log{\frac{q}{p}} = \log{\left(1 + \left(\frac{q}{p} - 1\right)\right)} \le \frac{q}{p} - 1.
+    \]
+
+    Значит, домножая его на $p$ и навешивая знак интеграла, получаем:
+    \[
+    d(\mathsf{P}, \mathsf{P}) - d(\mathsf{Q}, \mathsf{P}) = \int p \log{\frac{q}{p}}\,d\mu \le \int p \left(\frac{q}{p} - 1\right)\,d\mu = \int p \,d\mu - \int q \,d\mu = 1 - 1 = 0.
+    \]
+
+    Причём по свойству интеграла Лебега равенство верно, когда $\mu$-п.н. $\log{q/p} \ge q/p - 1$, то есть $q/p = 1$, что и требовалось.
+\end{proof}
+
+По методу подстановки оценка для сего функционала может быть получена как
+\[
+G(\mathsf{P}^*_n) = \argmax_{\theta\in\Theta} \int \ln{\rho_{\theta}(x)}\,\mathsf{P}^*_n(dx) = \argmax_{\theta\in\Theta} \frac{1}{n}\sum_{i=1}^n \ln{\rho_{\theta}(X_i)},
+\]
+что есть точка максимума логарифмической функции правдоподобия.}
+
+\begin{example}\label{mle_example}
+    Найдём ОМП для некоторых известных распределений. Чаще всего мы будем делать это через нахождение стационарных точек, в которых производная функции равна нулю. Проверки, что такие точки действительно доставляют непременно максимум функции правдоподобия, будут опускаться и оставляться читателю в качестве упражнения.
+    \begin{itemize}
+        \item $X_i \sim \geomd(p)$.
+        \begin{gather*}
+        f_{p}(X_1, \ldots, X_n) = \prod (1-p)^{X_i}p,\;\;\;L_{p}(X_1, \ldots, X_n) = n\ln{p} + \sum X_i\ln{(1-p)},\\
+        \frac{\partial}{\partial p}L_{p}(X_1, \ldots, X_n) = \frac{n}{p} - \sum \frac{X_i}{1 - p} = 0,\;\;\; \frac{n(1-p)-p\sum X_i}{p(1-p)}=0,\\
+        p\left(n + \sum X_i\right) = n \Longrightarrow \widehat{p} = \frac{n}{n + \sum X_i} = \frac{1}{1 + \overline{\mathbf X}}.
+        \end{gather*}
+        
+        \item $X_i \sim \ud(0, a)$. В данном случае тупо взять и продифференцировать не выйдет, так как плотность разрывна. Функция правдоподобия выглядит так:
+    \[
+    f_{a}(X_1, \ldots, X_n) = \frac{1}{a^n}I(0 \le X_i \le a,\; i = 1,\ldots, n).
+    \]
+    Там, где $f_{a}$ не равна нулю, она равна некоторой константе $\frac{1}{a^n}$, которую надо максимизировать, то есть надо минимизировать $a$. Но сделать её меньше $X_{(n)}$ не получится, так как иначе не выполнится условие под индикатором. Следовательно, $\widehat{a} = X_{(n)}$ будет искомой ОМП.
+
+        \item $X_i \sim \mathcal{N}(a, \sigma^2)$. \begin{gather*}
+        f_{\theta}(X_1,\ldots, X_n) = \frac{1}{(2\pi\sigma^2)^{n/2}}\exp\left(-\sum{\frac{(X_i-a)^2}{2\sigma^2}}\right),\\
+        L_{\theta}(X_1, \ldots, X_n) = -\frac{n}{2}\ln{2\pi\sigma^2} - \sum{\frac{(X_i-a)^2}{2\sigma^2}}
+        \end{gather*}
+        \begin{gather*}
+        \left\{
+        \begin{aligned}
+        &\frac{\partial L_{\theta}}{\partial a} = \sum{\frac{X_i-a}{\sigma^2}} = 0,\\
+        &\frac{\partial L_{\theta}}{\partial \sigma^2} = - \frac{n}{2\sigma^2} + \sum{\frac{(X_i-a)^2}{2\sigma^4}} = 0.
+        \end{aligned}\right.\;\;\;
+        \left\{
+        \begin{aligned}
+        &\widehat{a} = \overline{\mathbf X},
+        &\frac{1}{\sigma^2}{\underbrace{\sum (X_i - \overline{\mathbf X})^2}_{\phantom{0}=ns^2}} - n = 0.
+        \end{aligned}\right.\\
+        \left\{
+        \begin{aligned}
+        &\widehat{a} = \overline{\mathbf X},\\
+        &\widehat{\sigma^2} = s^2(\mathbf X).
+        \end{aligned}\right.
+    \end{gather*}
+
+        \item $X_i \sim \Gamma(\alpha, \lambda)$, где $\alpha$ --- известная величина, а $\lambda$ --- неизвестный параметр.
+        \[
+    f_{\lambda}(X_1,\ldots, X_n) = \frac{\lambda^{n\alpha} \left(\prod X_i\right)^{\alpha-1}}{\Gamma(\alpha)^n}e^{-\lambda\sum X_i}I(X_1,\ldots,X_n>0).
+    \]
+    Для $X_1,\ldots,X_n>0$ имеем
+    \begin{gather*}
+        L_{\lambda}(X_1,\ldots, X_n) = n\alpha\ln{\lambda} - \lambda \sum X_i + \ln{\left(\left(\prod X_i\right)^{\alpha-1}\right)} - n\ln{\Gamma(\alpha)},\\
+        \frac{\partial}{\partial \lambda} L_{\lambda}(X_1,\ldots, X_n) = \frac{n\alpha}{\lambda} - \sum X_i = 0 \Longrightarrow \widehat{\lambda} = \frac{\alpha}{\overline{\mathbf X}}.
+    \end{gather*}
+
+        \item $X_i \sim \paretod(k, a)$. \[
+    f_{\lambda}(X_1,\ldots, X_n) = \frac{k^{n} a^{nk}}{\left(\prod X_i\right)^{k+1}}I(X_1,\ldots,X_n\ge a).
+    \]
+    Для фиксированного $k$ максимум $f_{\theta}$ достигает при $\widehat{a} = X_{(1)}$ (аналогично пункту с $\ud(0, a)$). Тогда если принять $a$ равным первой порядковой статистике, получаем
+    \begin{gather*}
+        L_{\theta}(X_1,\ldots, X_n) = n \ln{k} + nk\ln{X_{(1)}} - (k+1)\sum \ln{X_i}\\
+        \frac{\partial}{\partial \theta} L_{\theta}(X_1,\ldots, X_n) = \frac{n}{k} + n\ln{X_{(1)}} - \sum \ln{X_i} = 0,\;\;\; \frac{1}{k} = \overline{\ln{\mathbf X}} - \ln{X_{(1)}}\Longrightarrow\\
+        \widehat{k} = \frac{1}{\overline{\ln{\mathbf X}} - \ln{X_{(1)}}}.
+    \end{gather*}
+    \end{itemize}
+\end{example}
+
+\begin{example}\label{mle_for_multivariate_normal}
+Рассмотрим также очень полезный и поучительный пример для $\mathbf X_1, \ldots, \mathbf X_n \sim \mathcal N (a,\Sigma)$ --- выборки из независимых гауссовских векторов, где $a \in \R^{k}$, $\Sigma \in \mathbb{S}^k_{++}$. Напомним, что плотность гауссовского вектора размерности $k$ равна
+\[
+\rho(x_1, \ldots, x_k) = (2\pi)^{-k/2}(\det{\Sigma})^{-1/2}\exp{\left(-\frac{1}{2}(\mathbf{x}-a)^T\Sigma^{-1}(\mathbf{x}-a)\right)}.
+\]
+Найдём оценку максимального правдоподобия для вектора средних $a$ и ковариационной матрицы $\Sigma$.
+
+Для начала найдём логарифмическую функцию правдоподобия:
+\begin{gather*}
+    f_{\theta}(\mathbf X_1, \ldots, \mathbf X_n) = (2\pi)^{-nk/2}(\det{\Sigma})^{-n/2}\exp{\left(\sum_{i=1}^n-\frac{1}{2}(\mathbf X_i-a)^T\Sigma^{-1}(\mathbf X_i-a)\right)},\\
+    \ln{f_{\theta}(\mathbf X_1, \ldots, \mathbf X_n)} = -\frac{nk}{2}\ln{2\pi} - \frac{n}{2}\ln{\det{\Sigma}} - \frac{1}{2}\sum_{i=1}^n (\mathbf X_i-a)^T\Sigma^{-1}(\mathbf X_i-a).
+\end{gather*}
+С производной по $a$ всё плюс-минус ясно, хотя для дальнейшего понимания выпишем её через дифференциал:
+\begin{gather*}
+d_a \ln{f_{\theta}(\mathbf X_1, \ldots, \mathbf X_n)} = - \frac{1}{2} d_a\left( \sum_{i=1}^n (\mathbf X_i-a)^T\Sigma^{-1}(\mathbf X_i-a)\right) =\\
+= - \frac{1}{2}\sum_{i=1}^n\left(d_a(\mathbf X_i-a)^T\Sigma^{-1}(\mathbf X_i-a) + (\mathbf X_i-a)^T\Sigma^{-1}d_a(\mathbf X_i-a)\right) =\\
+= \frac{1}{2}\sum_{i=1}^n\left(d_a a^T\Sigma^{-1}(\mathbf X_i-a) + (\mathbf X_i-a)^T\Sigma^{-1}d_a a\right) = \\
+= \frac{1}{2}\sum_{i=1}^n\left(\langle d_a a, \Sigma^{-1}(\mathbf X_i-a) \rangle+ \langle \Sigma^{-T}(\mathbf X_i-a), d_a a \rangle \right) =
+\end{gather*}
+\begin{gather*}
+=\left< \sum_{i=1}^n \Sigma^{-1}(\mathbf X_i-a), d_a a \right> = 0 \Longrightarrow \sum_{i=1}^n \Sigma^{-1}(\mathbf X_i-a) = 0 \Longrightarrow \widehat{a} = \overline{\mathbf X}.
+\end{gather*}
+
+Тут даже представляется возможным найти второй дифференциал, тем самым можно показать, что при фиксированной $\Sigma$ полученная оценка $\widehat{a}$ доставляет максимум функции правдоподобия, но мы на это, как обычно, забьём.
+
+Куда интереснее найти дифференциал по $\Sigma$. Для этого сделаем следующий трюк: сумму в логарифмической функции правдоподобия представим как след от одноэлементной матрицы:
+\[
+\ln{f_{\theta}(\mathbf X_1, \ldots, \mathbf X_n)} = -\frac{nk}{2}\ln{2\pi} - \frac{n}{2}\ln{\det{\Sigma}} - \frac{1}{2}\tr{\sum_{i=1}^n (\mathbf X_i-a)^T\Sigma^{-1}(\mathbf X_i-a)}.
+\]
+Это окажется весьма удобным, так как по свойству следа функцию теперь можно записать так:
+\begin{gather*}
+\ln{f_{\theta}(\mathbf X_1, \ldots, \mathbf X_n)} = -\frac{nk}{2}\ln{2\pi} - \frac{n}{2}\ln{\det{\Sigma}} - \frac{1}{2}\sum_{i=1}^n \tr{(\mathbf X_i-a)(\mathbf X_i-a)^T\Sigma^{-1}} = \\
+= -\frac{nk}{2}\ln{2\pi} - \frac{n}{2}\ln{\det{\Sigma}} - \frac{1}{2}\sum_{i=1}^n \langle (\mathbf X_i-a)(\mathbf X_i-a)^T, \Sigma^{-1}\rangle.
+\end{gather*}
+Осталось также вспомнить (или загуглить) формулу для дифференциала определителя:
+\[
+d (\det{\Sigma}) = \det{\Sigma} \cdot \langle\Sigma^{-T}, d \Sigma\rangle,
+\]
+где $\Sigma^{-T} = (\Sigma^T)^{-1}$ (что в нашем случае просто $\Sigma^{-1}$). 
+
+{\footnotesize Эту формулу на самом деле несложно вывести, если вспомнить, что частная производная определителя по элементу матрицы -- это соответствующее алгебраическое дополнение, а у нас как раз есть формула из курса алгебры, связывающее матрицы из алгебраических дополнений и обратную. Но вернёмся к нашим баранам.}
+
+Чтобы не вспоминать дифференциал для обратной матрицы, введём замену $\Xi = \Sigma^{-1}$ и будем дифференцировать по ней:
+\begin{gather*}
+    d_{\Xi} \ln{f_{\theta}(\mathbf X_1, \ldots, \mathbf X_n)} = \frac{n}{2}d_{\Xi} (\ln{\det{\Xi}}) - \frac{1}{2} d_{\Xi} \left( \sum_{i=1}^n \langle (\mathbf X_i-a)(\mathbf X_i-a)^T, \Xi\rangle\right) =\\
+    = \frac{n}{2\det{\Xi}} d_{\Xi}(\det{\Xi}) - \frac{1}{2} \sum_{i=1}^n \left< (\mathbf X_i-a)(\mathbf X_i-a)^T, d_{\Xi} \Xi\right> = \\
+    = \left< \frac{n}{2}\Xi^{-1} - \frac{1}{2} \sum_{i=1}^n (\mathbf X_i-a)(\mathbf X_i-a)^T, d_{\Xi} \Xi\right> = 0 \Longrightarrow \Xi^{-1} = \frac{1}{n}\sum_{i=1}^n (\mathbf X_i-a)(\mathbf X_i-a)^T.
+\end{gather*}
+
+С учётом того, что оценку для $a$ мы нашли ранее, получаем итоговый ответ:
+\[
+\widehat{a} = \overline{\mathbf X},\;\;\;\widehat{\Sigma} = \frac{1}{n}\sum_{i=1}^n (X_i-\overline{\mathbf X})(X_i-\overline{\mathbf X})^T.
+\]
+
+\end{example}
+
+Конечно, у этого метода сразу видно несколько недостатков. Во-первых, нельзя быть точно уверенным, что стационарные точки функции правдоподобия будут доставлять максимум. Во-вторых, не у всех функций правдоподобия можно легко вычислить стационарные точки. Первая проблема либо решается нахождением второго дифференциала, либо игнорируется (мы, как можно заметить, пошли вторым путём).
+
+\subsection{Асимптотическая эффективность}\label{asympt_var}
+
+Так же, как и в предыдущем разделе, нас интересует наилучшая оценка, только теперь та, у которой наименьшая возможная асимптотическая дисперсия. Оказывается, что при некоторых ограничениях таковой является ОМП.
+\begin{strongregularity*}{}{
+	Помимо \ref{same_supp}-\ref{fisher_inf} также предполагаем выполнимость следующих постулатов:
+}
+\begin{enumerate}[label=C\theenumi]
+    \addtocounter{enumi}{4}
+    \item Для $\theta_1 \ne \theta_2 \in \Theta$ распределения $\mathsf{P}_{\theta_1}$ и $\mathsf{P}_{\theta_2}$ различны;\\
+    \item Для $\mu$-п.в. $\mathbf{x}$ плотность $\rho_{\theta}(\mathbf{x})$ трижды непрерывно дифференцируема;\\
+    \item $\int \rho_{\theta}(\mathbf{x}) d\mathbf{x}$ можно дважды дифференцировать под знаком интеграла;\\
+    \item\label{last_cond} Существует функция $H(\mathbf{x})$ такая, что $\me H(\mathbf X) < \infty$ и при всех $\mathbf{x}$ для любого $\theta \in \Theta$ верно $\left|\frac{\partial^3}{\partial \theta^3} \ln{\rho_{\theta}(\mathbf{x})}\right| \le H(\mathbf{x})$.
+\end{enumerate}
+\end{strongregularity*}
+
+При данных условиях можно утверждать следующее.
+
+\begin{theorem}{}{}
+    Пусть для любого $n \in \N$ и любой реализации выборки $x_1, \ldots, x_n$ существует и единственно решение $\theta^*$ уравнения правдоподобия
+    \[
+    \sum_{i=1}^n \frac{\partial}{\partial \theta} \ln{\rho_{\theta}(x_i)} = 0.
+    \]
+    Тогда при условиях \ref{same_supp}-\ref{last_cond} оценка $\theta^*$ является асимптотически нормальной с асимптотической дисперсией $i(\theta)^{-1}$.
+\end{theorem}
+
+Но не менее потрясающий результат заключается в том, что оценка выше в некотором смысле не улучшаема.
+
+\begin{theorem}{}{}
+    При условиях \ref{same_supp}-\ref{last_cond} для любой асимптотически нормальной оценки $\widehat{\theta}$ с непрерывной асимптотической дисперсией $\sigma^2(\theta)$ выполнено $\sigma^2(\theta) \ge i(\theta)^{-1}$.
+\end{theorem}
+
+Таким образом, в текущих ограничениях ОМП не хуже любой другой оценки с непрерывной асимптотической дисперсией в асимптотическом подходе.
+
+\begin{example}
+    Условие на непрерывность асимптотической дисперсии существенно. Можно построить такую оценку, которая для некоторых значений параметра будет оценивать его чуть лучше, чем обычно, порождая разрыв.
+
+    Рассмотрим нормальную модель сдвига: $X_1, \ldots, X_n \sim \mathcal{N}(\theta, 1)$, где $\theta \in \R$. В ней имеется естественная ОМП $\widehat{\theta} = \overline{\mathbf X}$, которая по теореме выше будет асимптотически эффективной оценкой параметра $\theta$ с асимптотической дисперсией 1. Её можно в некоторой степени <<усовершенствовать>>, взяв оценку
+    \[
+    \theta^* = \left\{
+    \begin{aligned}
+        &\overline{\mathbf X},\;\;&|\overline{\mathbf X}| \ge n^{-1/4},\\
+        &\overline{\mathbf X}/2,\;\;&|\overline{\mathbf X}| < n^{-1/4}.
+    \end{aligned}
+    \right.
+    \]
+    Идея проста: если среднее достаточно близко к нулю, то скорее всего параметр сдвига нулевой, и в таком случае можно искусственно уменьшить значение оценки, тем самым уменьшив разброс.
+
+    Для удобства перепишем сию оценку в следующем виде:
+    \[
+    \theta^* = \overline{\mathbf X} \cdot \left(\frac{1}{2} + \frac{1}{2}\cdot I(|\overline{\mathbf X}| \ge n^{-1/4})\right)
+    \]
+
+    При $\theta = 0$ распределение $\sqrt{n}\overline{\mathbf X}$ одинаково, поэтому $\pth[](|\overline{\mathbf X}| \ge n^{-1/4}) = \pth[](\sqrt{n}|\overline{\mathbf X}| \ge n^{1/4}) \to 0$, откуда $I(|\overline{\mathbf X}| \ge n^{-1/4}) \stackrel{d}{\to} 0$, и по лемме Слуцкого
+    $$\sqrt{n}\theta^* = \underbrace{\sqrt{n}\overline{\mathbf X}}_{\sim \mathcal{N}(0, 1)} \cdot \underbrace{\left(\frac{1}{2} + \frac{1}{2}\cdot I(|\overline{\mathbf X}| \ge n^{-1/4})\right)}_{\stackrel{d}{\to} 1/2} \stackrel{d}{\to} \mathcal{N}(0, 1/4).$$
+
+    Пусть теперь $\theta \ne 0$. В таком случае $\overline{\mathbf X} \stackrel{d}{\to} \theta \ne 0$, поэтому $\pth[](|\overline{\mathbf X}| \ge n^{-1/4}) \to 1$, и соответственно $\sqrt{n}I(|\overline{\mathbf X}| < n^{-1/4}) \stackrel{d}{\to} 0$. Всё по той же лемме Слуцкого имеем
+    \[
+    \sqrt{n}(\theta^* - \theta) = \sqrt{n}(\overline{\mathbf X} - \theta) + \underbrace{\frac{\sqrt{n}}{2}\cdot I(|\overline{\mathbf X}| < n^{-1/4})}_{\stackrel{d}{\to}0} \stackrel{d}{\to} \mathcal{N}(0, 1). 
+    \]
+
+    Таким образом, асимптотическая дисперсия оценки равна
+    \[
+    \sigma^2(\theta) = \left\{
+    \begin{aligned}
+        &1/4, \;\;&\theta = 0;\\
+        &1, \;\; &\theta \ne 0,
+    \end{aligned}
+    \right.
+    \]
+    что, вообще говоря, меньше дисперсии ОМП.
+\end{example}
+
+Не всегда корни уравнения правдоподобия можно легко найти в явном виде, как это было ранее. Вместо трудозатратного аналитического нахождения максимума правдоподобия можно попытаться найти его численно. Стандартным способом является градиентный спуск или его модификации по типу SGD, Momentum и прочих. В следующих разделах мы обсудим некоторые техники, которые позволяют находить ОМП более эффективно.
+
+\subsection{Натуральный градиентный спуск}\label{NGD}
+
+Вернёмся к понятию информации Фишера, введённой в прошлом параграфе. В этом разделе мы обсудим её геометрический смысл, который подскажет нам более эффективный способ нахождения максимума правдоподобия. Из задачи \ref{fisher-inf-is-second-derivative} читатель поймёт, что при дополнительных условиях регулярности информационную матрицу Фишера можно найти иным способом: как матожидание матрицы Гессе логарифма правдоподобия:
+\[
+I_{\mathbf X}(\boldtheta)_{ij} = - \me[\boldtheta] \frac{\partial^2 \ln \rho_{\boldtheta}(\mathbf X)}{\partial \theta_i \partial \theta_j}.
+\]
+
+Как известно из курса матанализа, гессиан показывает характер выпуклости функции. С учётом того, что математическое ожидание приближается выборочным средним, за знак которого можно вынести знак производной:
+\[
+-i(\boldtheta)_{ij} = \me[\boldtheta] \frac{\partial^2 \ln \rho_{\boldtheta}(X_1)}{\partial \theta_i \partial \theta_j} \stackrel{\boldtheta\text{-п.н.}}{\longleftarrow} \frac{1}{n}\sum_{i=1}^n \frac{\partial^2 \ln \rho_{\boldtheta}(X_i)}{\partial \theta_i \partial \theta_j} = \frac{\partial^2}{\partial \theta_i \partial \theta_j}\sum_{i=1}^n \frac{\ln \rho_{\boldtheta}(X_i)}{n},
+\]
+информация Фишера характеризует выпуклость оптимизируемой функции правдоподобия. Чем выше информация, тем более ярко будет выражен искомый максимум правдоподобия; чем ниже информация, тем более размыто он будет выделяться среди своей окрестности.
+
+
+
+\subsection{Одношаговые оценки}
+
+Вместо численной максимизации правдоподобия можно (так же численно) находить корень уравнения правдоподобия. Здесь мы остановимся на так называемом \textit{методе Ньютона}. Если перед нами стоит задача найти решение уравнения $\phi(\theta) = 0$, где $\phi$ --- какая-то дифференцируемая функция, то корень можно найти итеративно: начинаем с некоторого начального приближения $\theta_0$ и далее вычисляем последующие значения $\theta_n$:
+\[
+\theta_{n+1} = \theta_{n} - \frac{\phi(\theta_n)}{\phi'(\theta_n)}.
+\]
+Мотивация такого алгоритма проста: если $\widehat{\theta}$ есть корень сего уравнения, то при разложении в ряд Тейлора функции $\phi$ в окрестности точки $\theta$, близкой к $\widehat{\theta}$, имеем
+\[
+0 = \phi(\widehat{\theta}) \approx \phi(\theta) + (\widehat{\theta} - \theta) \cdot \phi'(\theta),
+\]
+откуда можно выразить $\widehat{\theta}$:
+\[
+\widehat{\theta} \approx \theta - \frac{\phi(\theta)}{\phi'(\theta)}.
+\]
+В нашем случае вместо $\phi$ хочется взять производную логарифмической функции правдоподобия $\frac{\partial}{\partial \theta} L_{\theta}(\mathbf X)$. Данный метод легко обобщается и на многомерный случай:
+\[
+\theta_{n+1} = \theta_{n} - [d^2L_{\theta_n}]^{-1} \cdot dL_{\theta_n}^T,
+\]
+где $dL_{\theta_n}^T$ --- столбец из частных производных $L_{\theta_n}(\mathbf X)$, а $d^2L_{\theta_n}$ --- матрица из вторых производных (так называемая матрица Гессе).
+
+Неочевидным остаётся то, на сколько шагов запускать сей алгоритм. Оказывается, при некоторых условиях достаточно совершить всего лишь один шаг, чтобы получить не просто хорошую оценку, а асимптотически эффективную, то есть в такой же асимптотической дисперсией, как у и ОМП.
+\begin{theorem}{}{}
+    В условиях регулярности \ref{same_supp}-\ref{last_cond} если $\theta^*$ --- асимптотически нормальная оценка параметра $\theta$, то одношаговая оценка
+    \[
+    \widehat{\theta} = \theta^* - \frac{\dfrac{\partial}{\partial \theta} L_{\theta^*}(\mathbf X)}{\dfrac{\partial^2}{\partial \theta^2} L_{\theta^*}(\mathbf X)}
+    \]
+    будет иметь асимптотическую дисперсию $1/i(\theta)$.
+\end{theorem}
+
+\begin{example}
+    Рассмотрим модель сдвига распределения Коши:
+    \[
+    \rho_{\theta}(x) = \frac{1}{\pi(1 + (x - \theta)^2)}.
+    \]
+    У нас уже имеется довольно неплохая оценка $\theta^* = \widehat{\mu}$, у которой мы даже знаем асимптотическую дисперсию $\sigma^2(\theta) = \pi^2/4$. Однако для ОМП она будет равна $1 / i(\theta) = 2$, так как
+    \[
+    i(\theta) = \me \left(\frac{\partial}{\partial \theta} L_{\theta}(X_1)\right)^2 = \me \left(\frac{-2(X_1 - \theta)}{1 + (X_1 - \theta)^2}\right)^2 = \int_{\R} \frac{4x^2}{\pi(1+x^2)^3}\,dx = \frac{1}{2},
+    \]
+    то есть ещё есть куда стремиться. Но благо есть одношаговая оценка, построенная по $\widehat{\mu}$, и она уже будет иметь ту же самую асимптотическую дисперсию:
+    \[
+    \widehat{\theta} = \widehat{\mu} + \left.\sum_{i=1}^n \frac{X_i - \widehat{\mu}}{1 + (X_i - \widehat{\mu})^2} \right/ \sum_{i=1}^n \frac{1 - (X_i - \widehat{\mu})^2}{\bigl(1 + (X_i - \widehat{\mu})^2\bigr)^2}.
+    \]
+    Проверим, что дисперсия и вправду такая. Смоделируем 100000 выборок размера $n = 100$ и прикинем, какую дисперсию имеют обычная выборочная медиана и одношаговая оценка.
+    \begin{minted}{python}
+def compare_variance(n):
+    num = 100000
+    x = sps.cauchy.rvs(size=(n, num))
+    med = np.median(x, axis=0)
+    one_step = med +\
+        ((x - med) / (1 + (x - med) ** 2)).sum(axis=0) /\
+        ((1 - (x - med) ** 2) / (1 + (x - med) ** 2) ** 2).sum(axis=0)
+    print('Variance for median -', med.var() * n)
+    print('Variance for one-step estimator -', one_step.var() * n)
+
+compare_variance(100)
+    \end{minted}
+    \begin{lstlisting}
+Variance for median - 2.527736079325076
+Variance for one-step estimator - 2.0560138435262205
+    \end{lstlisting}
+    Как можно лицезреть, асимптотические дисперсии получились довольно близкими к теоретическим значениям. Однако следует помнить, что асимптотическая дисперсия на то и асимптотическая, чтобы показывать поведение оценки лишь для большого размера выборки. Для малого количества наблюдений, к примеру, $n=20$ медиана более выигрышна, так как одношаговая оценка чувствительнее относится к выбросам.
+    \begin{minted}{python}
+compare_variance(20)
+    \end{minted}
+    \begin{lstlisting}
+Variance for median - 2.7872805561964147
+Variance for one-step estimator - 45.95128078716877
+    \end{lstlisting}
+\end{example}
+
+\subsection{EM-алгоритм}
+
+Рассмотрим другой распространённый метод, который не только значительно упрощает нахождение решений уравнения правдоподобия, но и позволяет <<выжимать>> из данных больше информации. Данная тема заслуживает отдельной главы, однако мы затронем её лишь вскользь; более подробное её описание и больше примеров можно найти, например, в \cite{murphy2022probabilistic}.
+
+Ключевой идеей является введение так называемых \textit{латентных величин} в нашу модель. Проще говоря, мы предполагаем, что помимо исходных данных в природе существуют некоторые скрытые, недоступные нам наблюдения. Если ввести достаточно удачные латентные переменные, то их совместная с видимой выборкой плотность распределения окажется <<достаточно хорошей>> для максимизации, например, будет принадлежать экспоненциальному классу распределений, в то время как исходная функция правдоподобия может быть тяжела в плане оптимизации. 
+
+\begin{example}\label{gauss_mixture}
+	Мультимодальные данные, в которых имеются два и более ярковыраженных пика, зачастую удобно объяснять с помощью модели \textit{смеси нормальных распределений}. Для простоты рассмотрим смесь двух гауссиан:
+	\begin{equation}\label{normal_mixure}
+		\rho_{\boldmu, \boldsigma, \boldpi}(x) = \pi_1 \cdot \frac{1}{\sqrt{2\pi\sigma_1^2}} \exp\left(-\frac{(x-\mu_1)^2}{2\sigma^2_1}\right) + \pi_0 \cdot \frac{1}{\sqrt{2\pi\sigma_0^2}} \exp\left(-\frac{(x-\mu_0)^2}{2\sigma^2_0}\right),
+	\end{equation}
+	где $\pi_1 + \pi_0 = 1$, $\pi_1, \pi_0 > 0$.
+	
+	У смеси распределений есть естественная интерпретация: перед генерацией очередного элемента выборки бросается монетка, которая падаем орлом вверх с вероятностью $\pi_1$. Если выпал орёл, то величина генерируется из распределения $\mathcal{N}(\mu_1, \sigma^2_1)$, иначе --- из $\mathcal{N}(\mu_0, \sigma^2_0)$. Это отражает тот факт, что объекты выборки могут иметь разную природу (например, пол, расу и т.д.), определяющую вероятностный закон, которому подчиняется целевая величина.
+	
+	Модель эта, конечно, хорошая, но имеет существенный недостаток, критичный в текущем контексте: у выборки из такого параметрического семейства нет ОМП (см. задачу \ref{no_mle_for_mixture}). Ничего страшного, решение уравнения правдоподобия всё ещё может существовать и обладать разумными свойствами по типу состоятельности, однако вскрывается другой нюанс: правдоподобие выборки крайне неприятно максимизировать. Так как плотность равна некоторой сумме, то логарифмическую функцию правдоподобия не получится удобно <<причесать>>, и градиенты у неё будут паршивыми.
+	
+	Однако всё меняется, если помимо исходной выборки рассматривать те самые результаты выпадений монетки: если обозначить за $z_i$ индикатор выпадения орла для $i$-ого элемента выборки, то совместная плотность будет иметь вид
+	\[
+	f_{\boldmu, \boldsigma, \boldpi}(\mathbf x, \mathbf z) = \prod_{i=1}^n (\pi_1\phi_{\mu_1, \sigma_1^2}(x_i))^{z_i} \cdot (\pi_0\phi_{\mu_0, \sigma_0^2}(x_i))^{1 - z_i},
+	\]
+	где для краткости мы обозначили за $\phi_{\mu, \sigma^2}$ плотность $\mathcal{N}(\mu, \sigma^2)$. Логарифмическая функция правдоподобия в таком случае равна
+	\[
+	L_{\boldmu, \boldsigma, \boldpi}(\mathbf x, \mathbf z) = \sum_{i=1}^n \left[z_i \ln (\pi_1\phi_{\mu_1, \sigma_1^2}(x_i)) + (1 - z_i)\ln (\pi_0\phi_{\mu_0, \sigma_0^2}(x_i))\right],
+	\]
+	что максимизировать одно удовольствие.
+\end{example}
+
+Однако мы вообще говоря не знаем значений латентных переменных, чтобы за просто так оптимизировать совместную плотность. Можно было бы взять её маргинальную версию, беря интеграл по латентным переменным, но их распределение, очевидно, зависит от неизвестных параметров, которые мы хотели оценить посредством латентных переменных~--- замкнутый круг. Выход из него заключается в том, чтобы попеременно обновлять то значения параметров, то распределение на латентных переменных. Сделаем это следующим образом.
+
+Рассмотрим общую задачу максимизации логарифмической функции правдоподобия $L_{\mathbf x}(\boldtheta) = \ln \rho_{\boldtheta}(\mathbf x)$, и на текущем $t$-ом шаге мы взяли в качестве параметра $\boldtheta_t$. Используем его в условном распределении $\rho_{\boldtheta_t}(\mathbf z | \mathbf x)$, по которому возьмём матожидание полной плотности:
+\[
+L_{\mathbf x}(\boldtheta) = \ln \int \rho_{\boldtheta}(\mathbf x, \mathbf z)\,dz = \ln \int \frac{\rho_{\boldtheta}(\mathbf x, \mathbf z)}{\rho_{\boldtheta_t}(\mathbf z | \mathbf x)}\rho_{\boldtheta_t}(\mathbf z | \mathbf x)\,dz = \ln \me[\mathbf z \sim \rho_{\boldtheta_t}(\mathbf z | \mathbf x)] \frac{\rho_{\boldtheta}(\mathbf x, \mathbf z)}{\rho_{\boldtheta_t}(\mathbf z | \mathbf x)}.
+\]
+
+Теперь, когда на сцене появилось матожидание, можно применить неравенство Йенсена и перейти к нижней оценки лог. функции правдоподобия, которую удобнее максимизировать.
+\[
+L_{\mathbf x}(\boldtheta) = \ln \me[\mathbf z \sim \rho_{\boldtheta_t}(\mathbf z | \mathbf x)] \frac{\rho_{\boldtheta}(\mathbf x, \mathbf z)}{\rho_{\boldtheta_t}(\mathbf z | \mathbf x)} \ge \me[\mathbf z \sim \rho_{\boldtheta_t}(\mathbf z | \mathbf x)] \left(\ln  \frac{\rho_{\boldtheta}(\mathbf x, \mathbf z)}{\rho_{\boldtheta_t}(\mathbf z | \mathbf x)}\right).
+\]
+
+Матожидание справа сокращённо называют ELBO (англ. \textsf{evidence lower bound}). Эта нижняя оценка обладает важным свойством: при $\boldtheta = \boldtheta_t$ в неравенстве выше достигается равенство. Действительно,
+\[
+\mathrm{ELBO}(\boldtheta_t) = \me[\mathbf z \sim \rho_{\boldtheta_t}(\mathbf z | \mathbf x)] \left(\ln  \frac{\rho_{\boldtheta_t}(\mathbf x, \mathbf z)}{\rho_{\boldtheta_t}(\mathbf z | \mathbf x)}\right) = \\
+\]
+\[
+= \me[\mathbf z \sim \rho_{\boldtheta_t}(\mathbf z | \mathbf x)] \left(\ln  \frac{\rho_{\boldtheta_t}(\mathbf z | \mathbf x) \cdot \rho_{\boldtheta_t}(\mathbf x)}{\rho_{\boldtheta_t}(\mathbf z | \mathbf x)}\right) = \me[\mathbf z \sim \rho_{\boldtheta_t}(\mathbf z | \mathbf x)] \ln \rho_{\boldtheta_t}(\mathbf x) = \ln \rho_{\boldtheta_t}(\mathbf x) = L_{\mathbf x}(\boldtheta_t).
+\]
+
+Такие функции ещё называют \textit{вариационной нижней оценкой}. При её наличии оптимизацию исходной функции $L_{\mathbf x}(\boldtheta)$ можно свести к оптимизации оценки, которую зачастую проводить легче. Тогда если $\boldtheta_{t+1} = \argmax_{\boldtheta} \mathrm{ELBO}(\boldtheta)$, то
+\[
+L_{\mathbf x}(\boldtheta_{t+1}) \ge \mathrm{ELBO}(\boldtheta_{t+1}) \ge \mathrm{ELBO}(\boldtheta_{t}) = L_{\mathbf x}(\boldtheta_{t}),
+\]
+то есть по прошествии шага алгоритма правдоподобие не уменьшилось. Таким образом, задача свелась к максимизации какой-то не очень сложной функции. Обычно к $\mathrm{ELBO}$ дополнительно добавляют константу $\me[\mathbf z \sim \rho_{\boldtheta_t}(\mathbf z | \mathbf x)]\ln \rho_{\boldtheta_t}(\mathbf z | \mathbf x)$, которая не влияет на $\argmax$, но при этом оптимизируемая функция принимает более приятный вид:
+\[
+J(\theta) = \me[\mathbf z \sim \rho_{\boldtheta_t}(\mathbf z | \mathbf x)] \left(\ln  \frac{\rho_{\boldtheta}(\mathbf x, \mathbf z)}{\rho_{\boldtheta_t}(\mathbf z | \mathbf x)}\right) + \me[\mathbf z \sim \rho_{\boldtheta_t}(\mathbf z | \mathbf x)]\ln \rho_{\theta_t}(\mathbf z | \mathbf x) = \me[\mathbf z \sim \rho_{\boldtheta_t}(\mathbf z | \mathbf x)] \ln \rho_{\boldtheta}(\mathbf x, \mathbf z).
+\]
+
+Итак, приведём окончательный вариант так называемого \textit{EM-алгоритма}:
+\begin{enumerate}
+	\item В качестве начального приближения параметров выбираем некоторое $\theta_0$;
+	\item Для $t$ от 0 до $k$ повторяем следующее:
+	\begin{itemize}
+		\item Берём текущее значение параметров $\boldtheta_t$;
+		\item ($E$-шаг, от слова \textsf{Expectation}) Считаем матожидание
+		\[
+		J(\theta) = \me[\mathbf z \sim \rho_{\boldtheta_t}(\mathbf z | \mathbf x)] \ln \rho_{\boldtheta}(\mathbf x, \mathbf z),
+		\]
+		по латентным переменным $\mathbf z$, распределённым в соответствии с $\rho_{\boldtheta_t}(\mathbf z | \mathbf x)$;
+		\item ($M$-шаг, от слова \textsf{Maximization}) Ищем точку максимума функции выше:
+		$$
+		\boldtheta_{t+1} = \argmax_{\boldtheta} J(\theta).
+		$$
+	\end{itemize}
+\end{enumerate}
+
+\begin{example}
+	Вернёмся к задаче разделения смесей из примера \ref{gauss_mixture}. Полная функция правдоподобия уже была найдена ранее, с помощью неё легко найти условное распределение на $\mathbf z$:
+	\[
+	\pth[\boldmu_t, \boldsigma_t, \pi_t](Z_i = j | X_i = x_i) \sim \pth[\boldmu_t, \boldsigma_t, \pi_t](Z_i = j, X_i = x_i) = \pi_{t,j} \cdot \phi_{\mu_{t,j}, \sigma_{t,j}^2}(x_i), \;\;\; j \in \{0, 1\}.
+	\]
+	Так как эти вероятности в сумме должны дать 1, то
+	\[
+	\pth[\boldmu_t, \boldsigma_t, \pi_t](Z_i = j | X_i = x_i) = \frac{\pi_{t,j} \cdot \phi_{\mu_{t,j}, \sigma_{t,j}^2}(x_i)}{\pi_{t,0} \cdot \phi_{\mu_{t,0}, \sigma_{t,0}^2}(x_i) + \pi_{t,1} \cdot \phi_{\mu_{t,1}, \sigma_{t,1}^2}(x_i)} =: p_{ij},
+	\]
+	откуда
+	\[
+	J(\boldmu, \boldsigma, \boldpi) = \me[\mathbf z \sim \rho_{\boldmu_t, \boldsigma_t, \boldpi_t}(\mathbf z | \mathbf x)] \ln \rho_{\boldmu, \boldsigma, \boldpi}(\mathbf x, \mathbf z) = \\
+	\]
+	\[
+	= \sum_{i=1}^n \left[ p_{i,1} \cdot (\ln \pi_1 + \ln \phi_{\mu_1, \sigma_1^2}(x_i)) + p_{i,0} \cdot (\ln \pi_0 + \ln \phi_{\mu_0, \sigma_0^2}(x_i))\right] = \sum_{i=1}^n (p_{i,1} \ln \pi_1 + p_{i,0} \ln \pi_0) - \\
+	\]
+	\[
+	- \frac{1}{2} \sum_{i=1}^n \left(p_{i,1} \cdot \left[\frac{(x_i - \mu_1)^2}{\sigma_1^2} + \ln(2\pi\sigma^2_1)\right] + p_{i,0} \cdot \left[\frac{(x_i - \mu_0)^2}{\sigma_0^2} + \ln(2\pi\sigma^2_0)\right]\right).
+	\]
+	$E$-шаг осуществлён, осталось максимизировать $J(\boldmu, \boldsigma, \boldpi)$ для получения новых приближений параметров. При нежелании продолжать выкладки это можно сделать программно, но мы всё же найдём ответ аналитически, к тому же параметры $\boldpi$ и $(\boldmu, \boldsigma)$ разнесены по разным слагаемым.
+	
+	Первое слагаемое в $J(\boldmu, \boldsigma, \boldpi)$ достигает своего максимума при $\pi_{t+1,j} = \sum_{i=1}^n p_{ij} / n$, а второе --- при
+	\[
+	\mu_{t+1,j} = \frac{\sum_{i=1}^n p_{ij} x_i}{\sum_{i=1}^n p_{ij}}, \;\;\; \sigma^2_{t+1,j} = \frac{\sum_{i=1}^n p_{ij} (x_i - \mu_{t+1,j})^2}{\sum_{i=1}^n p_{ij}}.
+	\]
+\end{example}
+
+Не всегда латентные переменные представляют собой что-то естественное, как в примере выше. Порой их вводят искусственно, но от этого EM-алгоритм не становится менее эффективным.
+
+\begin{example}[робастная регрессия]
+	В задаче регрессии, которая будет подробно рассмотрена в главе \ref{regression}, предполагается, что каждое наблюдение равно некоторой линейной комбинации набора признаков с неизвестными коэффициентами $\boldtheta$, к которому под воздействием некоторых факторов прибавляется случайный шум с неизвестным коэффициентом разброса $\sigma$:
+	\[
+	Y_i = \mathbf x_i^T \boldtheta + \sigma\epsilon_i, \;\;\; \me[]\epsilon_i = 0, \;\;\; i \in \{1, \ldots, n\}.
+	\]
+	
+	Обычно величину ошибки $\epsilon_i$ предполагают нормально распределённой, то есть $Y_i \sim \mathcal{N}(\mathbf x_i^T \boldtheta, \sigma^2)$. Однако такая модель плохо объясняет данные с выбросами, поэтому в таком случае в качестве распределения $\epsilon_i$ берут что-то с более тяжёлыми хвостами, например, распределение Стьюдента с $k$ степенями свободы. Но всплывает другая проблема: оно не принадлежит экспоненциальному семейству распределению, что затрудняет нахождение ОМП для параметров $(\boldtheta, \sigma)$. 
+	
+	Чтобы применить EM-алгоритм к этой задаче, вспомним, как определяется распределение Стьюдента:
+	\[
+	\epsilon_i \stackrel{d}{=} \frac{\xi_i}{\sqrt{\eta_i / k}}, \;\;\; \xi_i \sim \mathcal{N}(0, 1), \;\;\;\eta_i \sim \chi^2_k = \Gamma(k/2, 1/2).
+	\]
+	
+	Таким образом, ошибку можно представить как нормально распределённую $\sigma \xi_i \sim \mathcal{N}(0, \sigma^2)$, которую дополнительно поделили на случайный масштаб $\sqrt{\eta_i / k}$. Тогда давайте возьмём $Z_i = \eta_i / k \sim \Gamma(k/2, k/2)$ за латентную переменную. Полное правдоподобие такой модели будет иметь вид
+	\[
+	\rho_{\boldtheta, \sigma}(\mathbf y, \mathbf z) = \prod_{i=1}^n \rho(z_i) \underbrace{\rho_{\boldtheta, \sigma}(y_i | z_i)}_{\sim \mathcal{N}(\mathbf{x}_i^T \boldtheta, \sigma^2/z_i)} =  \prod_{i=1}^n \frac{(k/2)^{k/2} z_i^{k/2-1} e^{-kz_i/2}}{\Gamma(k/2)} \cdot \frac{e^{-\frac{(y_i-\mathbf{x}_i^T \boldtheta)^2}{2\sigma^2/z_i}}}{\sqrt{2\pi \sigma^2 / z_i}}.
+	\]
+	
+	Согласно E-шагу, нам нужно найти матожидание его логарифма по $\mathbf z \sim \rho_{\boldtheta_t, \sigma_t}(\mathbf z | \mathbf y)$ при фиксированных видимых переменных $\mathbf Y$. По формуле Байеса,
+	\[
+	\rho_{\boldtheta_t, \sigma_t}(\mathbf z | \mathbf y) \sim \rho_{\boldtheta_t, \sigma_t}(\mathbf y,  \mathbf z) \sim \prod_{i=1}^n \underbrace{z_i^{k/2-1/2} \exp\left[-z_i \cdot \left(\frac{(y_i-\mathbf{x}_i^T \boldtheta_t)^2}{2\sigma_t^2} + \frac{k}{2}\right)\right]}_{\sim \Gamma((k+1)/2, (y_i-\mathbf{x}_i^T \boldtheta_t)^2 /(2\sigma_t^2)+k/2)}.
+	\]
+	Находим искомое матожидание, одновременно скидывая в константу $C$ всё, что не зависит от значений $(\boldtheta, \sigma)$:
+	\[
+	\me[\mathbf z \sim \rho_{\boldtheta_t, \sigma_t}(\mathbf z | \mathbf x)] \ln \rho_{\boldtheta, \sigma}(\mathbf x, \mathbf z) = \underbrace{\sum_{i=1}^n \me[\mathbf z \sim \rho_{\boldtheta_t, \sigma_t}(\mathbf z | \mathbf x)]\ln \rho(z_i)}_{=\textrm{const}} + \sum_{i=1}^n \me[\mathbf z \sim \rho_{\boldtheta_t, \sigma_t}(\mathbf z | \mathbf x)] \ln \rho_{\boldtheta, \sigma}(y_i | z_i) = 
+	\]
+	\[
+	= C + \sum_{i=1}^n \me[\mathbf z \sim \rho_{\boldtheta_t, \sigma_t}(\mathbf z | \mathbf x)] \left(\ln{\sqrt{z_i}} - \ln{\sqrt{2\pi \sigma^2}} - z_i \cdot \frac{(y_i-\mathbf{x}_i^T \boldtheta)^2}{2\sigma^2} \right) =
+	\]
+	\[
+	= C' - n\ln{\sqrt{2\pi \sigma^2}} - \sum_{i=1}^n \frac{(y_i-\mathbf{x}_i^T \boldtheta)^2}{2\sigma^2} \cdot \me[\mathbf z \sim \rho_{\boldtheta_t, \sigma_t}(\mathbf z | \mathbf x)] z_i =
+	\]
+	\[
+	= C' - n\ln{\sqrt{2\pi \sigma^2}} - \sum_{i=1}^n \frac{(y_i-\mathbf{x}_i^T \boldtheta)^2}{2\sigma^2} \cdot \frac{k+1}{(y_i-\mathbf{x}_i^T \boldtheta_t)^2 / \sigma_t^2+k}.
+	\]
+	
+	Проведя максимизацию по $(\boldtheta, \sigma)$ или вспоминая формулу оценки для взвешенного МНК из будущего раздела \ref{weighted_mnk}, находим новые значения параметров:
+	\[
+	\boldtheta_{t+1} = (X^T D X)^{-1} X^T D Y, \;\;\; \sigma_{t+1}^2 = \frac{\|D(Y - \boldtheta_{t+1} X)\|^2}{n},
+	\]
+	где $D$ --- диагональная матрица c $D_{ii} = \frac{k+1}{(y_i-\mathbf{x}_i^T \boldtheta_t)^2 / \sigma_t^2+k}$.
+	
+	Несмотря на некоторую искусственность, которая пропитана введением $Z_i$, в результате получается предельно интерпретируемый и логичный результат: обычная линейная регрессия превращается в взвешенную, причём размер веса зависит от того, насколько сильно выбивается наблюдение из общей тенденции. Чем больше разница между текущим предсказанием $\mathbf{x}_i^T \boldtheta_t$ и наблюдаемым значением $y_i$, тем меньше вес $D_{ii}$, поэтому и вклад этого наблюдения приуменьшается, а степень этой регуляризации определяется гиперпараметром $k$. Грубо говоря, модель сама понимает, какие наблюдения являются выбросами, а какие нет.
+\end{example}
+
+\subsection*{Задачи}
+
+\begin{problem}
+	\textit{Категориальное распределение} является обобщением распределение Бернулли: для него с. в. принимает не 2, а уже $k$ значений:
+\[
+\pth[p_1, \ldots, p_k](X_1 = i) = p_i, \;\;\; \text{где $p_i > 0$, $i \in \{1, \ldots, k\}$, $\sum p_i = 1$}.
+\]
+
+Для выборки $\mathbf{X} = (X_1, \ldots, X_n)$ из категориального распределения постройте ОМП для вектора параметров $(p_1, \ldots, p_k)$.
+\end{problem}
+
+\begin{problem}
+    Рассмотрим выборку $X_1, Y_1, \ldots, X_n, Y_n$, где $X_i, Y_i \sim \mathcal{N}(\theta_i, \sigma^2)$, то есть в модели $2n$ наблюдений и $n+1$ параметр --- $n$ параметров сдвига и один параметр масштаба. Найдите оценку максимального правдоподобия для параметра $\sigma^2$ и покажите, что она смещена и несостоятельна.
+\end{problem}
+
+\begin{problem}
+	Докажите, что в примере \ref{mle_for_multivariate_normal} полученная стационарная точка действительно является точкой максимума функции правдоподобия.
+\end{problem}
+
+\begin{problem}\label{no_mle_for_mixture}
+	Докажите, что у выборки $\mathbf X = (X_1, \ldots, X_n)$ из распределения с плотностью \eqref{normal_mixure} не существует оценки максимального правдоподобия для вектора параметров $(\mu_1, \mu_0, \sigma^2_1, \sigma_0^2, \pi)$.
+\end{problem}
+
+\begin{problem}
+	Реализуйте EM-алгоритм для робастной регрессии на вашем любимом языке программирования. Убедитесь, что правдоподобие модели по видимым переменным не убывает. Как ведёт себя правдоподобие и оценки параметров при изменении гиперпараметра $k$ (например, когда данные приходят из модели с $k=3$, а алгоритм применяется для $k=1;10;\ldots$)?
+\end{problem}
+
+
+
+

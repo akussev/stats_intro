@@ -1,0 +1,195 @@
+\documentclass[12pt, a4paper, num=]{tools/listok}
+%\usepackage{scalerel}
+%\usepackage{tikz}
+%\usepackage{epigraph}
+%\usepackage{multicol}
+%\usetikzlibrary{matrix}
+%\usetikzlibrary{calc}
+%\usetikzlibrary{arrows}
+
+\newtcbtheorem[number within=section]{regularity}{Условия регулярности}
+{
+    enhanced,
+    frame hidden,
+    breakable,
+    titlerule=0mm,
+    toptitle=1mm,
+    bottomtitle=1mm,
+    fonttitle=\bfseries\large,
+    coltitle=black,
+    colbacktitle=red!40!white,
+    colback=red!20!white,
+}{asum}
+
+\newtcbtheorem[number within=section]{strongregularity}{Условия сильной регулярности}
+{
+    enhanced,
+    frame hidden,
+    breakable,
+    titlerule=0mm,
+    toptitle=1mm,
+    bottomtitle=1mm,
+    fonttitle=\bfseries\large,
+    coltitle=black,
+    colbacktitle=red!40!white,
+    colback=red!20!white,
+}{asum}
+
+\newtcbtheorem[number within=section]{theorem}{Теорема}
+{
+    enhanced,
+    frame hidden,
+    breakable,
+    titlerule=0mm,
+    toptitle=1mm,
+    bottomtitle=1mm,
+    fonttitle=\bfseries\large,
+    coltitle=black,
+    colbacktitle=blue!40!white,
+    colback=blue!20!white,
+    description delimiters parenthesis,
+    terminator sign={.},
+    separator sign none
+}{thm}
+
+%\newenvironment{theorem}[1][]{\begin{theorem_helper}{#1}{}
+%}{
+%\end{theorem_helper}
+%}
+
+\tcolorboxenvironment{proposition}{
+enhanced,
+    frame hidden,
+    breakable,
+    titlerule=0mm,
+    toptitle=1mm,
+    bottomtitle=1mm,
+    fonttitle=\bfseries\large,
+    coltitle=black,
+    colbacktitle=blue!40!white,
+    colback=blue!20!white,
+    description delimiters parenthesis,
+    terminator sign={.},
+    separator sign none}
+    
+\tcolorboxenvironment{corollary*}{
+enhanced,
+    frame hidden,
+    breakable,
+    titlerule=0mm,
+    toptitle=1mm,
+    bottomtitle=1mm,
+    fonttitle=\bfseries\large,
+    coltitle=black,
+    colbacktitle=blue!40!white,
+    colback=blue!20!white,
+    description delimiters parenthesis,
+    terminator sign={.},
+    separator sign none
+}
+
+\tcolorboxenvironment{definition}{
+enhanced,
+    frame hidden,
+    breakable,
+    titlerule=0mm,
+    toptitle=1mm,
+    bottomtitle=1mm,
+    fonttitle=\bfseries\large,
+    coltitle=black,
+    colbacktitle=green!40!white,
+    colback=green!20!white
+}
+
+
+\setlist[itemize]{itemsep=5pt} % Adjust the length as needed
+\setlist[enumerate]{itemsep=5pt} % Adjust the length as needed
+
+
+\DeclareMathOperator{\id}{id}
+\usepackage{ wasysym }
+
+\usepackage[pages = some]{background}
+\backgroundsetup{
+	scale = 1,
+	angle = 0,
+	opacity = 1,
+	contents = {\includegraphics[height = \paperheight, keepaspectratio]{background.jpg}}}
+
+\newcommand*{\hm}[1]{#1\nobreak\discretionary{}{\hbox{$\mathsurround=0pt #1$}}{}} %перед знаком для его дублирования при переносе формулы
+
+% \setlength\intextsep{0pt}
+
+\begin{document}
+\begin{titlepage}
+	\clearpage\thispagestyle{empty}
+	\centering
+	\textbf{ФПМИ МФТИ}
+    {\fontsize{85}{107}\selectfont\bf
+    \begin{center}
+    \begin{tabular}{ccccc}
+    \phantom{M}&\phantom{M}&\phantom{M}&\phantom{M}&\phantom{M}\\
+        В & В & Е & Д &  \\
+          & Е & Н & И & Е\\
+        В &   & М & А & Т\\
+        С & Т & А & Т & Ы
+    \end{tabular}
+    \end{center}
+    }
+    \vfill
+    { {\textbf{{%
+    Составитель: \href{https://vk.com/andkus}{Андрей Куссев}
+    }}}}
+	\vfill
+    Осень, 2022 год
+    
+    Дата компиляции:
+    
+    \DTMToday
+	\pagebreak
+	
+\end{titlepage}
+
+\setlength{\abovedisplayskip}{5pt plus 2pt minus 2pt}
+\setlength{\belowdisplayskip}{5pt plus 2pt minus 2pt}
+\hypertarget{intro}{}
+\tableofcontents
+\vspace{10pt}
+\textbf{Примечание}. Перед Вами учебное пособие по математической статистике, за основу которого взяты семинары уважаемого Алексея Сергеевича Волостнова, проведённые осенью 2022 года на 3 курсе ПМИ Физтеха. Целью сей методички является помощь в постижении этого не самого лёгкого курса, а также знакомство читателя с дополнительными, но не менее важными сведениями, которым не уделяют время на основном потоке по статистике.
+
+Однако следует помнить: эта методичка написана ещё тем оболтусом и профаном. Доверять всему тому, что здесь написано, нельзя от слова совсем. А ещё тут куча опечаток, и как минимум формулировки определений и теорем лучше перепроверять у нормальных авторов. Если Вы видите здесь лажу или непонятный момент ---  не стесняйтесь и пинайте \href{https://vk.com/andkus}{автора} для последующего исправления.
+
+Код сего документа открыт и доступен по \href{https://www.overleaf.com/read/tdmvvfrmgzks#053aa4}{этой ссылке}. В последнее время Overleaf существенно ограничивает время компиляции, поэтому могут возникнуть сложности со скачиванием документа. Его актуальную версию можно найти в директории проекта.
+
+\newpage
+% \setcounter{section}{-1}
+% \input{src/prerequisite}
+% \newpage
+\part{Параметрический подход}
+\input{src/estimators}
+\include{src/methods}
+\include{src/compare}
+\include{src/mle}
+\include{src/sufficiency}
+\include{src/confidence_interval}
+\newpage
+\part{Проверка статистических гипотез}
+\input{src/test_intro}
+\include{src/umpt}
+\include{src/general_test}
+\include{src/special_test}
+\include{src/correlation}
+\include{src/homogeneity_test}
+\include{src/multiple_testing}
+\newpage
+\part{Прочие модели и методы в статистике}
+\input{src/regression}
+\include{src/bayes}
+\include{src/robust}
+\include{src/bootstrap}
+\newpage
+\bibliographystyle{plain}
+\bibliography{tools/refs}
+\addcontentsline{toc}{section}{\refname}
+
+\end{document}

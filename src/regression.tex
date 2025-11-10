@@ -1,0 +1,593 @@
+\section{Линейная регрессия}\label{regression}
+
+На практике часто встречается ситуация, когда зависимость целевой величины от некоторых <<фичей>> можно приблизить чем-то линейным. В данном случае мы предполагаем, что истинная зависимость линейна и немного искажена каким-то шумом (ошибки измерения, выбросы и прочие вещи), который можно считать \textit{случайным}. Отсюда полезно посмотреть на данную проблему с точки зрения теории вероятности. Давайте же приведём формальную постановку вопроса на языке статистики и установим некоторые приятные результаты.
+
+Предположим, что $i$-ая целевая величина ($i\in\{1,\ldots,n\}$) в своей первозданности есть линейная комбинация признаков $Z_{ij}$ с некоторыми неизвестными параметрами $\theta_1, \ldots, \theta_k$, то есть $\sum_{j=1}^{k} \theta_j Z_{ij}$. Но при её измерении появляется некоторый шум $\epsilon_i$, поэтому наблюдение за этой величиной $X_i$ можно представить как
+\[
+X_i = \sum_{j=1}^{k} \theta_j Z_{ij} + \epsilon_i,
+\]
+или, что эквивалентно,
+\begin{equation}\label{basic_linreg}
+    \mathbf X = Z \boldtheta + \boldepsilon,
+\end{equation}
+где $Z=(Z_{ij})$ --- матрица <<объект-признак>>, $\boldtheta = (\theta_1, \ldots, \theta_k)^T$ --- столбец из неизвестных параметров. Логично допустить, что выполнены следующие ограничения на случайный вектор $\boldepsilon$:
+\begin{enumerate}[label=\textbf{L\arabic*}]
+    \item\label{zero_me} Для всех $i$ выполнено $\me[] \epsilon_i = 0$ (в среднем ошибки нет);
+    \item\label{diag_var} Дисперсия $\epsilon_i$ одинакова и равна неизвестному параметру $\sigma^2$, причём $\epsilon_i$ попарно нескоррелированы, то есть $\va[]\boldepsilon = \sigma^2E_n$ (наблюдения друг на друга не влияют).
+\end{enumerate}
+Итак, наша задача --- по вектору наблюдений $\mathbf X$ оценить вектор $\boldtheta$ (чтобы иметь возможность находить целевую величину по другим признакам) и дисперсию $\sigma^2$ (чтобы оценить нашу уверенность в оценке и уметь строить доверительные интервалы для неё). 
+
+\begin{wrapfigure}{r}{0.45\textwidth}
+\includegraphics[width=0.45\textwidth]{pic/regression_geom/regression_geom.pdf}
+\end{wrapfigure}
+
+Для дальнейшего удобства также будет важно сделать допущение
+\begin{enumerate}[label=\textbf{L\arabic*}]
+    \addtocounter{enumi}{2}
+    \item\label{lin_ind} Столбцы $\mathbf{z}_1, \ldots, \mathbf{z}_k$ матрицы $Z$ \textit{линейно независимы}.
+\end{enumerate}
+Это позволяет интерпретировать задачу с позиций линейной алгебры: истинный вектор $l = Z\boldtheta$ лежит в некотором подпространстве $\mathcal{L} = \langle \mathbf{z}_1, \ldots, \mathbf{z}_k \rangle \subset \R^n$, образованном столбцами матрицы $Z$, в то время как наблюдаемый вектор $\mathbf X$ может в общем случае и не лежать в $\mathcal{L}$ (см. рис.). Отсюда логично в качестве <<приближения>> вектора $\mathbf X$ выбрать его проекцию $\Pr_{\mathcal{L}} \mathbf X$ на это подпространство, так как она доставляет минимум расстояния между $\mathbf X$ и векторами из $\mathcal{L}$.
+
+Осталось лишь найти оценку вектору параметров $\widehat{\boldtheta}$, отвечающую проекции $\pr_{\mathcal{L}} \mathbf X = Z \widehat{\boldtheta}$. Так как $\pr_{\mathcal{L}} \mathbf X$ -- ортогональная проекция, то вектор $\bolddelta = \mathbf X - \pr_{\mathcal{L}} \mathbf X$ лежит в $\mathcal{L}^{\bot}$, а значит, он ортогонален любому вектору из $\mathcal{L}$, в частности, векторам $\mathbf{z}_1, \ldots, \mathbf{z}_k$. Следовательно, вектор $Z^T\bolddelta$, состоящий из скалярных произведений $\bolddelta$ с $\mathbf{z}_j$, -- нулевой, то есть
+\[
+Z^T(\mathbf X - \pr_{\mathcal{L}} \mathbf X) = 0 \Longrightarrow Z^T \mathbf X = (Z^T Z) \widehat{\boldtheta}.
+\]
+Так как столбцы матрицы $Z$ независимы, то матрица $Z^T Z$ будет невырожденной, поэтому у неё есть обратная, из чего получаем оценку
+\[
+ \widehat{\boldtheta} = (Z^T Z)^{-1} Z^T \mathbf X.
+\]
+В частности, оператор проектирования на $\mathcal{L}$ соответствует матрице $A = Z(Z^T Z)^{-1} Z^T$.
+\begin{definition}
+Полученная оценка называется \textit{оценкой по методу наименьших квадратов}.
+\end{definition}
+
+\begin{wrapfigure}{l}{0.6\textwidth}
+    \includegraphics[width=0.6\textwidth]{pic/regression_example/image-13.pdf}
+\end{wrapfigure}
+
+Такое название метод получил благодаря иному способу получения сей оценки: не через линейную алгебру, а посредством анализа. Как было сказано выше, проекция доставляет минимум расстояния от вектора до пространства. Значит, при искомой оценке достигается экстремум суммы квадратов координат разности $F(\boldtheta) = \|Z\boldtheta - \mathbf X\|^2$. Точку экстремума же можно найти обычным дифференцированием:
+\begin{gather*}
+    d_{\boldtheta} F = d_{\boldtheta} \left[(Z\boldtheta - \mathbf X)^T(Z\boldtheta - \mathbf X)\right] = (Z\boldtheta - \mathbf X)^T Z d\boldtheta + d\boldtheta^T Z^T(Z\boldtheta - \mathbf X) = \\
+    \langle 2Z^T(Z\boldtheta - \mathbf X), d\boldtheta\rangle = 0 \Longrightarrow Z^TZ \widehat{\boldtheta} = Z^T \mathbf X,\;\;\;\widehat{\boldtheta} = (Z^T Z)^{-1} Z^T \mathbf X.
+\end{gather*}
+
+\subsection{Свойства МНК-оценки}
+
+Сразу выделим полезные свойства полученной оценки.
+
+\begin{proposition}\label{mnk_prop}
+    Оценка по методу наименьших квадратов имеет матожидание, равное $\boldtheta$, и её ковариационная матрица равна $\sigma^2 (Z^T Z)^{-1}$.
+\end{proposition}
+
+\begin{proof}
+По линейности матожидания:
+\begin{gather*}
+    \me[\boldtheta, \sigma^2] \widehat{\boldtheta} = \me[\boldtheta, \sigma^2] ((Z^T Z)^{-1} Z^T \mathbf X) = (Z^T Z)^{-1} Z^T \me[\boldtheta, \sigma^2] \mathbf X = (Z^T Z)^{-1} Z^T \me[\boldtheta, \sigma^2] (Z\boldtheta + \boldepsilon) = \\
+    = (Z^T Z)^{-1} Z^T \cdot Z\boldtheta = \boldtheta.
+\end{gather*}
+Менее очевидной является формула для ковариационной матрицы, но её легко вывести:
+\[
+\cov(A\boldxi, B\boldeta) = A\cov(\boldxi, B\boldeta) = A(\cov(B\boldeta, \boldxi))^T = A(B\cov(\boldeta, \boldxi))^T = A\cov(\boldxi, \boldeta)B^T.
+\]
+Теперь мы можем получить требуемое:
+\begin{gather*}
+\va[\boldtheta, \sigma^2] \widehat{\boldtheta} = \va[\boldtheta, \sigma^2] ((Z^T Z)^{-1} Z^T \mathbf X) = (Z^T Z)^{-1} Z^T \cdot \va[\boldtheta, \sigma^2] \mathbf X \cdot ((Z^T Z)^{-1} Z^T)^T = \\
+= (Z^T Z)^{-1} Z^T \cdot \va[\boldtheta, \sigma^2] (Z\boldtheta + \boldepsilon) \cdot Z (Z^T Z)^{-1} = (Z^T Z)^{-1} Z^T \cdot \sigma^2 E \cdot Z (Z^T Z)^{-1} = \sigma^2 (Z^T Z)^{-1}.
+\end{gather*}
+\end{proof}
+
+Таким образом, полученная оценка $\widehat{\boldtheta}$ является несмещённой оценкой вектора $\boldtheta$. При выполнении допущений выше можно сказать, что такая оценка будет наилучшей в некотором хорошем классе оценок.
+
+\begin{theorem}{Гаусс, Марков}{}
+    В линейной регрессионной модели при выполнении условий \ref{zero_me}-\ref{lin_ind} оценка $\widehat{\boldtheta}$ является эффективной в классе несмещённых линейных оценок $\boldtheta$.
+\end{theorem}
+
+\begin{proof}
+    Пусть $\boldtheta^*(\mathbf X) = C\mathbf X$ --- некоторая несмещённая линейная оценка $\boldtheta$, то есть $C \in \R^{k \times n}$, и 
+    \[
+    \forall \boldtheta \in \R^{k}\colon \boldtheta = \me[\boldtheta, \sigma^2] \boldtheta^* = \me[\boldtheta, \sigma^2] (C\mathbf X) = CZ\boldtheta \Longrightarrow CZ = E_k.
+    \]
+    Найдём ковариационную матрицу сей оценки:
+    \[
+    \va[\boldtheta, \sigma^2] \boldtheta^* = \va[\boldtheta, \sigma^2](C\mathbf X) = C\cdot (\va[\boldtheta, \sigma^2] \boldepsilon)\cdot C^T = \sigma^2 CC^T.
+    \]
+    Таким образом, по определению эффективной многомерной оценки нам надо показать, что матрица $CC^T - (Z^TZ)^{-1}$ положительно полуопределена. Для этого домножим $(Z^TZ)^{-1}$ слева и справа на единичную матрицу $E_k = CZ$ и вынесем общие множители за скобку:
+    \[
+    CC^T - (Z^TZ)^{-1} = CC^T - CZ(Z^TZ)^{-1}(CZ)^T = C\left(E_n - Z(Z^TZ)^{-1}Z^T\right)C^T.
+    \]
+    Вспоминаем, что $Z(Z^TZ)^{-1}Z^T$ есть оператор проектирования на $\mathcal{L}$, поэтому $B = E_n - Z(Z^TZ)^{-1}Z^T$ соответствует проектору на $\mathcal{L}^{\bot}$, и её собственные значения равны 0 и 1. Следовательно, $B$ есть матрица некоторой положительно полуопределённой квадратичной формы. Следовательно, матрица выше положительна полуопределена.
+\end{proof}
+
+Что же насчёт $\sigma^2$? Так как она характеризует меру <<разброса>> вокруг пространства $\mathcal{L}$, то её можно приблизить квадратом длины расстояния до $\mathcal{L}$, а именно $RSS = \left\|\mathbf X - Z\widehat \boldtheta\right\|^2$. Положим
+\[
+\widehat{\sigma^2} = \frac{1}{n - k} \left\|\mathbf X - Z\widehat \boldtheta\right\|^2.
+\]
+Константа около квадрата нормы выбрана так, чтобы выполнялось
+\begin{proposition}
+    $\widehat{\sigma^2}$ является несмещённой оценкой параметра $\sigma^2$.
+\end{proposition}
+
+\begin{proof}
+    Так как $Z\widehat \boldtheta = \pr_{\mathcal{L}} \mathbf X$, то $\mathbf X - Z\widehat \boldtheta = \pr_{\mathcal{L}^{\bot}} \mathbf X = B\mathbf X$, где матрица ортогонального проектирования на $\mathcal{L}^{\bot}$ может быть представлена как
+    \[
+    B = E_n - A = E_n - Z(Z^T Z)^{-1} Z^T,
+    \]
+    и поэтому
+    \[
+    \me[\boldtheta, \sigma^2] \left\|\mathbf X - Z\widehat \boldtheta\right\|^2 = \me[\boldtheta, \sigma^2]\|B\mathbf X\|^2.
+    \]
+    Заметим, что $Z\boldtheta \in \mathcal{L}$ и $\mathbf X = Z\boldtheta + \boldepsilon$, поэтому $\pr_{\mathcal{L}^{\bot}} \mathbf X = \pr_{\mathcal{L}^{\bot}} \boldepsilon$, и
+    \[
+    \me[\boldtheta, \sigma^2]\|B\mathbf X\|^2 = \me[\boldtheta, \sigma^2] \|B
+    \boldepsilon\|^2 = \me[\boldtheta, \sigma^2] \boldepsilon^T B^T B \boldepsilon \eqcirc
+    \]
+    Провернём классический трюк: представим число под знаком матожидания как след одноэлементной матрицы. Это позволит нам воспользоваться свойством следа матрица о циклической перестановке:
+    \[
+    \eqcirc \tr \me[\boldtheta, \sigma^2] \boldepsilon^T B^T B \boldepsilon = \tr \me[\boldtheta, \sigma^2] B^T B \boldepsilon \boldepsilon^T \eqcirc
+    \]
+    Матрица $B = E_n - Z(Z^T Z)^{-1} Z^T$ симметрична и отвечает проектору, поэтому $B^TB = B^2 = B$, значит, по линейности матожидания
+    \begin{gather*}
+        \eqcirc \tr B \cdot \me[\boldtheta, \sigma^2] \boldepsilon \boldepsilon^T = \tr B \cdot \va[\boldtheta, \sigma^2] \boldepsilon = \tr B \cdot \sigma^2 E_n = \sigma^2 \tr B = \sigma^2 \tr (E_n - Z(Z^T Z)^{-1} Z^T) = \\
+        = \sigma^2(n - \tr\left[ (Z^T Z)^{-1} Z^TZ\right]) = \sigma^2(n - \tr E_k) = \sigma^2(n-k).
+    \end{gather*}
+    Таким образом, $\widehat{\sigma^2} = RSS/(n-k)$ является несмещённой оценкой $\sigma^2$, что и требовалось.
+\end{proof}
+
+\begin{example}
+Пусть имеется 2 объекта с весами $a$ и $b$. Мы взвесили с ошибками первый, второй и оба объекта вместе, причём дисперсия ошибки в последнем случае была в 4 раза больше. Пусть наблюдения в первом, втором и третьем случае равнялись $X_a$, $X_b$ и $X_{ab}$ соответственно. Из условия имеем
+\[
+\begin{pmatrix}
+X_a\\
+X_b\\
+X_{ab}
+\end{pmatrix}
+=
+\begin{pmatrix}
+a\\
+b\\
+a+b
+\end{pmatrix}
++
+\begin{pmatrix}
+\epsilon_1\\
+\epsilon_2\\
+\epsilon_3
+\end{pmatrix} = 
+\begin{pmatrix}
+1 & 0\\
+0 & 1\\
+1 & 1
+\end{pmatrix}
+\begin{pmatrix}
+a\\
+b
+\end{pmatrix}
++
+\begin{pmatrix}
+\epsilon_1\\
+\epsilon_2\\
+\epsilon_3
+\end{pmatrix}
+,
+\]
+причём $\va[] \epsilon_3 = 4\va[] \epsilon_1 = 4\va[] \epsilon_2 = 4\sigma^2$. Чтобы свести задачу к модели линейной регрессии выше, достаточно поделить на 2 третью строчку в формуле выше: тогда дисперсия ошибки по этой координате уменьшиться в 4 раза (так как $\va[] (\epsilon_3 / 2) = (\va[] \epsilon_3) / 4$), чего бы нам и хотелось. Матрицей признаков и наблюдением тогда будут являться соответственно
+\[
+Z = \begin{pmatrix}
+1 & 0\\
+0 & 1\\
+1/2 & 1/2
+\end{pmatrix},\;\;\; \mathbf X = \begin{pmatrix}
+X_a\\
+X_b\\
+X_{ab} / 2
+\end{pmatrix}.
+\]
+Теперь у нас есть всё, чтобы посчитать оценку:
+\begin{gather*}
+    Z^T Z = \begin{pmatrix}
+1 & 0 & 1/2 \\
+0 & 1 & 1/2
+\end{pmatrix} \cdot 
+\begin{pmatrix}
+1 & 0\\
+0 & 1\\
+1/2 & 1/2
+\end{pmatrix} = 
+\begin{pmatrix}
+5/4 & 1/4 \\
+1/4 & 5/4
+\end{pmatrix},\;\;\;
+(Z^T Z)^{-1} = 
+\begin{pmatrix}
+5/6 & -1/6 \\
+-1/6 & 5/6
+\end{pmatrix}\\
+\widehat{\boldtheta} = (Z^T Z)^{-1} Z^T \mathbf X = 
+\begin{pmatrix}
+5/6 & -1/6 \\
+-1/6 & 5/6
+\end{pmatrix}
+\begin{pmatrix}
+1 & 0 & 1/2 \\
+0 & 1 & 1/2
+\end{pmatrix}
+\begin{pmatrix}
+X_a\\
+X_b\\
+X_{ab} / 2
+\end{pmatrix} = \\
+= \begin{pmatrix}
+5/6 & -1/6 & 1/3\\
+-1/6 & 5/6 & 1/3
+\end{pmatrix}
+\begin{pmatrix}
+X_a\\
+X_b\\
+X_{ab} / 2
+\end{pmatrix} \Longrightarrow\\
+\widehat{a} = \frac{5X_a}{6} - \frac{X_b}{6} + \frac{X_{ab}}{6},\;\;\;\widehat{b} = -\frac{X_a}{6} + \frac{5X_b}{6} + \frac{X_{ab}}{6}
+\end{gather*}
+\end{example}
+
+\subsection{Взвешенный МНК}\label{weighted_mnk}
+
+Подход из примера выше ещё называют \textit{взвешенным МНК}: если $\epsilon_i$ имеют разную дисперсию, а точнее ковариационная матрица $\boldepsilon$ равна $\sigma^2D$, где $D$ --- диагональна, то можно домножить равенство \eqref{basic_linreg} на $D^{-1/2}$, что сведёт нашу задачу к обычной линейной регрессии. Обобщим эту идею.
+
+Рассмотрим более общую модель, где шум может не только иметь разный разброс, но и быть зависимым между собой. Для этого заменим условие \ref{diag_var} на
+\begin{enumerate}[label=\textbf{L\arabic*'}]
+    \addtocounter{enumi}{1}
+    \item\label{l2} Ковариационная матрица вектора $\boldepsilon$ равна $\va[] \boldepsilon = \sigma^2 V$, где $V$ известна и положительна определена, а $\sigma^2$ --- неизвестный параметр.
+\end{enumerate}
+
+Так как $V$ --- п.о., то существует п.о. матрица $V^{1/2}$ такая, что $V^{1/2} \cdot V^{1/2} = V$. Теперь достаточно домножить уравнение \eqref{basic_linreg} на $V^{-1/2}$, получив классическую модель линейной регрессии
+\[
+\widetilde{\mathbf X} = \widetilde{Z} \boldtheta + \widetilde{\boldepsilon},
+\]
+где $\widetilde{\mathbf X} = V^{-1/2}\mathbf X$, $\widetilde{Z} = V^{-1/2}Z$ и $\widetilde{\boldepsilon} = V^{-1/2}\boldepsilon$. Случайная составляющая $\widetilde{\boldepsilon}$ всё ещё имеет нулевое матожидание и матрицу ковариаций
+\[
+\va[]\widetilde{\boldepsilon} = \va[]\left[V^{-1/2}\boldepsilon\right] = V^{-1/2} \cdot \va[]\boldepsilon \cdot V^{-1/2} = V^{-1/2} \cdot \sigma^2 V \cdot V^{-1/2} = \sigma^2E_n.
+\]
+Вкупе с тем фактом, что при домножении на невырожденную матрицу ранг $Z$ не поменялся, в новой модели выполняются условия \ref{zero_me}-\ref{lin_ind}. Подставляя матрицы $\widetilde{\mathbf X}$ и $\widetilde{Z}$ в определении оценки по МНК, получаем оценку
+\begin{equation}\label{weighted_mnk_formula}
+    \widehat{\boldtheta} = \left(\widetilde{Z}^T \widetilde{Z}\right)^{-1}\widetilde{Z}^T\widetilde{\mathbf X} = \left(Z^T V^{-1} Z\right)^{-1}Z^T V^{-1} \mathbf X.
+\end{equation}
+{\small
+\begin{example}[критерий Шапиро-Уилка revisited]\label{proof_of_sw}
+    Напомним, что перед нами стояла задача проверки гипотезы о принадлежности семейству распределений с параметрами сдвига и масштаба, которая обсуждалась в разделе \ref{qq_plot}. Здесь мы поймём, как можно получить формулу \eqref{sw_statistic}, подогнав регрессию под похожий на QQ-plot график.
+    
+    Рассмотрим вариационный ряд $\mathbf X = (X_{(1)}, \ldots, X_{(n)})$, построенный по выборке из распределения $F_0\left(\frac{x-\mu}{\sigma}\right)$. Нормируем выборку: $Y_{(i)} = (X_{(i)} - \mu) / \sigma$, или, что эквивалентно, $\mathbf X = \mu \mathbf{1} + \sigma \mathbf Y$, где $\mathbf{1} = (1, \ldots, 1)$ --- вектор из $n$ единиц. Распределение $\mathbf Y = (Y_{(1)}, \ldots, Y_{(n)})$ не зависит от параметров и однозначно определяется распределением $F_0$, обозначим её вектор средних и матрицу ковариаций за $\mathbf{m}$ и $V$ соответственно. Вынося из $\mathbf Y$ вектор средних, получим следующее равенство:
+    \[
+    \mathbf X = \mu \mathbf{1} + \sigma \mathbf{m} + \sigma \boldepsilon,
+    \]
+    где $\boldepsilon = \mathbf Y - \mathbf{m}$, и как несложно понять, $\me[]\boldepsilon = \mathbf{0}$, $\va[] \boldepsilon = V$. Таким образом, получена обобщённая модель линейной регрессии, которая отчасти похожа на QQ-plot: в ней по матожиданию $i$-ой порядковой статистики выборки из $F_0$ нужно с точностью до сдвига предсказать значение $i$-ой по порядку величины.
+
+    В терминах написанного выше ясно, что матрица признаков $Z$ состоит из столбцов $\mathbf{1}$ и $\mathbf{m}$. С этим знанием посчитаем наилучшую оценку $\mu$ и $\sigma$:
+    \begin{gather*}
+        Z^TV^{-1}Z =
+        \begin{pmatrix}
+            \mathbf{1}^T V^{-1} \mathbf{1} & \mathbf{1}^T V^{-1} \mathbf{m}\\
+            \mathbf{m}^T V^{-1} \mathbf{1} & \mathbf{m}^T V^{-1} \mathbf{m}
+        \end{pmatrix},\\
+        \left(Z^TV^{-1}Z\right)^{-1} = \frac{1}{\mathbf{1}^T V^{-1} \mathbf{1}\mathbf{m}^T V^{-1} \mathbf{m} - (\mathbf{1}^T V^{-1} \mathbf{m})^2}
+        \begin{pmatrix}
+            \mathbf{m}^T V^{-1} \mathbf{m} & -\mathbf{m}^T V^{-1} \mathbf{1}\\
+            -\mathbf{1}^T V^{-1} \mathbf{m} &  \mathbf{1}^T V^{-1} \mathbf{1}
+        \end{pmatrix},\\
+        \widehat{\mu} = \frac{\mathbf{m}^TV^{-1}(\mathbf{m}\mathbf{1}^T - \mathbf{1}\mathbf{m}^T)V^{-1}\mathbf X}{\mathbf{1}^T V^{-1} \mathbf{1}\mathbf{m}^T V^{-1} \mathbf{m} - (\mathbf{1}^T V^{-1} \mathbf{m})^2},\;\;\;
+        \widehat{\sigma} = \frac{\mathbf{1}^TV^{-1}(\mathbf{1}\mathbf{m}^T -  \mathbf{m}\mathbf{1}^T)V^{-1}\mathbf X}{\mathbf{1}^T V^{-1} \mathbf{1}\mathbf{m}^T V^{-1} \mathbf{m} - (\mathbf{1}^T V^{-1} \mathbf{m})^2}
+    \end{gather*}
+
+    Оценка среднего может оказаться полезной, зачастую она обладает хорошими свойствами или устойчива к выбросам, так как выражается через порядковые статистики. Однако нас интересует оценка $\sigma$: этот параметр встречается в том числе и перед $\boldepsilon$, то есть он ещё отвечает за меру разброса около прямой, поэтому, причесав его оценку, можно получить критерий <<хорошести>> приближения.
+
+    Для дальнейшего удобства сделаем допущение, что распределение $F_0$ симметрично. Из него следует, что число $\mathbf{1}^T V^{-1} \mathbf{m}$ (а значит и $\mathbf{m}^T V^{-1} \mathbf{1}$) равно нулю, что значительно упростит формулы выше:
+    \[
+    \widehat{\mu} = \frac{\mathbf{1}^T V^{-1}\mathbf X}{\mathbf{1}^T V^{-1}\mathbf{1}},\;\;\;
+    \widehat{\sigma} = \frac{\mathbf{m}^T V^{-1} \mathbf X}{\mathbf{m}^T V^{-1} \mathbf{m}}.
+    \]
+    Обычно берут не саму оценку $\widehat{\sigma}$, а её нормированную версию, то есть такую линейную комбинацию компонент $\mathbf X$, у которой норма вектора коэффициентов равна единице
+    \[
+    b = \mathbf{a}^T\mathbf X,\;\;\;\text{где}\;\;\;\mathbf{a} = \frac{\mathbf{m}^T V^{-1}}{\left(\mathbf{m}^T V^{-2}\mathbf{m}\right)^{1/2}}
+    \]
+    Заметим, что распределение $\widehat\sigma$ (а значит и $b$) не зависит от параметра сдвига $\mathbf X$, так как к наблюдению можно добавить число $c$ и в силу симметричности получить следующее:
+    \[
+    \widehat{\sigma} = \frac{\overbrace{c\mathbf{m}^T V^{-1} \mathbf{1}}^{=0} + \mathbf{m}^T V^{-1}(\mathbf X - c\mathbf{1})}{\mathbf{m}^T V^{-1} \mathbf{m}} = \frac{\mathbf{m}^T V^{-1}(\mathbf X - c\mathbf{1})}{\mathbf{m}^T V^{-1} \mathbf{m}}.
+    \]
+    Чтобы избавиться от зависимости от параметра масштаба, возведём оценку $b$ в квадрат и поделим её на выборочную дисперсию с множителем $n$, получив инвариантную относительно сдвига и сжатия \textit{статистику критерия Шапиро-Уилка}:
+    \[
+    W = \frac{b^2}{ns^2(\mathbf X)} = \frac{\left(\sum a_i X_{(i)}\right)^2}{\sum \left(X_i - \overline{\mathbf X}\right)^2}.
+    \]
+\end{example}
+}
+
+\subsection{Гауссовская линейная модель}
+
+Всякие физики да химики из своих внутренних побуждений часто полагают ошибки нормальными, поэтому в дальнейшем под $\boldepsilon$ будем подразумевать гауссовский вектор $\mathcal{N}(0, \sigma^2 E)$. Данная модель называется \textit{гауссовской линейной моделью}. Подобное допущение действительно бывает крайне полезным. Например, теперь можно утверждать следующий факт (бремя доказательства которого ложится на читателя, см. задачу \ref{full_suff_stat_for_linreg}):
+
+\begin{theorem}[label=suff_stat_for_linreg]{}{}
+Статистика $(\widehat{\boldtheta}, \|\mathbf X - Z \widehat{\boldtheta}\|^2)$ является полной достаточной в гауссовской линейной модели. Как следствие, оценки $\widehat{\boldtheta}$ и $\widehat{\sigma^2}$ являются оптимальными.
+\end{theorem}
+
+Знание о полноте и достаточности статистики, как мы знаем, нередко помогает при оценивании: если получится несмещённо оценить неизвестный параметр с помощью полной достаточной статистики, то по теореме Лемана-Шеффе такая оценка будет оптимальной.
+
+\begin{example}\label{gauss_example}
+Взвешивание трёх грузов массами $a$, $b$, $c$ на одних и тех же весах производится следующим образом: $n_1$ раз взвешиваются второй и третий груз вместе, $n_2$ раз взвешиваются первый и третий груз вместе и $n_3$ раз взвешиваются первый и второй груз вместе. Будем считать, что наша модель гауссовская, то есть все ошибки измерения распределены нормально и имеют дисперсию $\sigma^2$. Если в тупую перевести задачу на язык линейной регрессии, нам придётся иметь дело с матрицей признаков
+\[
+Z' =
+\begin{pmatrix}
+0 & \cdots & 0 & 1 & \cdots & 1 & 1 & \cdots & 1\\
+1 & \cdots & 1 & 0 & \cdots & 0 & 1 & \cdots & 1\\
+1 & \cdots & 1 & 1 & \cdots & 1 & 0 & \cdots & 0
+\end{pmatrix}^T,
+\]
+которая сама по себе выглядит неприятно, а ведь нужно ещё что-то обращать и много чего умножать --- гадость одним словом. Куда проще здесь будет считать именно $\alpha = b+c$, $\beta = a+c$ и $\gamma = a+b$ параметрами модели, а через них потом выразить нужные. В таком случае вектор наблюдений можно выразить как
+\[
+\mathbf X = 
+\begin{pmatrix}
+X^{\alpha}_1\\
+\hdotsfor{1}\\
+X^{\alpha}_{n_1}\\
+X^{\beta}_1\\
+\hdotsfor{1}\\
+X^{\beta}_{n_2}\\
+X^{\gamma}_1\\
+\hdotsfor{1}\\
+X^{\gamma}_{n_3}
+\end{pmatrix}
+= Z
+\begin{pmatrix}
+\alpha\\
+\beta\\
+\gamma
+\end{pmatrix}
++ \boldepsilon,\;\;\;\text{где  }
+Z = 
+\begin{pmatrix}
+1 & 0 & 0\\
+\hdotsfor{3}\\
+1 & 0 & 0\\
+0 & 1 & 0\\
+\hdotsfor{3}\\
+0 & 1 & 0\\
+0 & 0 & 1\\
+\hdotsfor{3}\\
+0 & 0 & 1\\
+\end{pmatrix}.
+\]
+Матрица $Z$ намного проще в использовании, потому что её столбцы $\textit{ортогональны}$: в таком случае матрица 
+\[
+Z^T Z = \begin{pmatrix}
+n_1 & 0 & 0\\
+0 & n_2 & 0\\
+0 & 0 & n_3\\
+\end{pmatrix}
+\]
+будет диагональной, что в разы упрощает дальнейшую работу:
+\begin{gather*}
+    \widehat{\boldtheta} = (Z^T Z)^{-1} Z^T \mathbf X = \\
+    =
+\begin{pmatrix}
+1/n_1 & 0 & 0\\
+0 & 1/n_2 & 0\\
+0 & 0 & 1/n_3\\
+\end{pmatrix}
+\begin{pmatrix}
+1 & \cdots & 1 & 0 & \cdots & 0 & 0 & \cdots & 0\\
+0 & \cdots & 0 & 1 & \cdots & 1 & 0 & \cdots & 0\\
+0 & \cdots & 0 & 0 & \cdots & 0 & 1 & \cdots & 1
+\end{pmatrix}\mathbf X =
+\begin{pmatrix}
+\frac{1}{n_1}\sum X_i^{\alpha}\\
+\frac{1}{n_2}\sum X_i^{\beta}\\
+\frac{1}{n_3}\sum X_i^{\gamma}
+\end{pmatrix}
+\end{gather*}
+Далее выражаем $a$, $b$ и $c$ через $\alpha$, $\beta$ и $\gamma$ и дело в шляпе: оптимальность оценок будет следовать из того, что они являются функциями от полных достаточных статистик.
+\[
+\widehat{a} = \frac{\overline{\mathbf X^{\beta}}+\overline{\mathbf X^{\gamma}} - \overline{\mathbf X^{\alpha}}}{2},\;\;\;
+\widehat{b} = \frac{\overline{\mathbf X^{\gamma}}+\overline{\mathbf X^{\alpha}} - \overline{\mathbf X^{\beta}}}{2},\;\;\;
+\widehat{c} = \frac{\overline{\mathbf X^{\alpha}}+\overline{\mathbf X^{\beta}} - \overline{\mathbf X^{\gamma}}}{2}
+\]
+\end{example}
+
+Рассмотрим внимательнее, как устроены найденные нами оценки в гауссовской линейной модели. В этом нам поможет
+
+\begin{theorem}{об ортогональном разложении}{}
+Пусть $\mathbf X \sim \mathcal{N}(\mathbf a, \sigma^2 E_n)$ --- гауссовский вектор, а $L_1 \oplus \ldots \oplus L_r$ --- ортогональное разложение $\R^n$. Тогда $\pr_{L_1} \mathbf X, \ldots, \pr_{L_r} \mathbf X$ независимы и нормально распределены, $\me[] \pr_{L_i} \mathbf X = \pr_{L_i} \mathbf a$ и для всех $i\in\{1, \ldots, r\}$
+\[
+\frac{1}{\sigma^2} \|\pr_{L_i} \mathbf X - \pr_{L_i} \mathbf a\|^2 \sim \chi^2_{\dim{L_i}}.
+\]
+\end{theorem}
+
+\begin{proof}
+Равенство $\me[] \pr_{L_i} \mathbf X = \pr_{L_i} \mathbf a$ очевидно в силу линейности матожидания, а проекция есть линейное преобразование. Посему для простоты перейдём к рассмотрению вектора $\mathbf Y = (\mathbf X - \mathbf a) / \sigma \sim \mathcal{N}(\mathbf 0, E_n)$: теперь достаточно показать, что проекции $\mathbf Y$ независимы и $\|\pr_{L_i}\mathbf Y\|^2 \sim \chi^2_{\dim L_i}$.
+
+Пусть $\mathfrak{E} = (\mathbf e_1, \ldots, \mathbf e_n)$~--- о/н базис, согласованный с разложением $L_1 \oplus \ldots \oplus L_r$, то есть $\mathfrak{E} = (\mathfrak{E}_1, \ldots, \mathfrak{E}_r)$, где $\mathfrak{E}_i$~--- базис в $L_i$, а $S$~--- матрица перехода от этого базиса к стандартному. Так как матрица перехода от одного о/н базиса к другому~--- ортогональна, то вектор $S\mathbf Y$ будет иметь распределение $\mathcal{N}(\mathbf 0, S\cdot E_n \cdot S^T) = \mathcal{N}(\mathbf 0, E_n)$, поэтому координаты $(S\mathbf Y)_j = \mathbf e_j^T \mathbf Y$ в новом базисе независимы в совокупности и имеют стандартное нормальное распределение.
+
+Но заметим, что в новом базисе проекция на какое-либо $L_i$ есть просто <<откидывание>> всех базисных векторов, кроме $\mathfrak{E}_i$:
+\[
+\pr_{L_i} \mathbf Y = \sum_{\mathbf e \in \mathfrak{E_i}} (\mathbf e^T Y) \cdot \mathbf e
+\]
+Таким образом, проекции независимы как функции от попарно не пересекающихся наборов независимых в совокупности координат вектора $S\mathbf Y$. Более того, квадрат длины проекции как сумма квадратов координат с распределением $\mathcal{N}(0, 1)$ имеет распределение $\chi^2_{\dim L_i}$, что и требовалось.
+\end{proof}
+
+Применим теорему к нашей модели. По определению МНК-оценки, $\pr_{\mathcal{L}} \mathbf X = Z\widehat{\boldtheta}$, а значит, $\pr_{\mathcal{L}^{\bot}} \mathbf X = \mathbf X - Z\widehat{\boldtheta}$, и по теореме об ортогональном разложении
+\begin{equation}\label{chi_nk}
+    \frac{1}{\sigma^2} \|\mathbf X - Z\widehat{\boldtheta}\|^2 \sim \chi^2_{\dim{\mathcal{L}^{\bot}}} = \chi^2_{n - k}.
+\end{equation}
+
+Что же касается $\widehat \boldtheta$, то она, как линейное преобразование гауссовского вектора $\mathbf X$, имеет распределение $\mathcal{N}(\boldtheta, \sigma^2(Z^T Z)^{-1})$ (параметры мы нашли ранее в утверждении \ref{mnk_prop}). Следовательно, $\widehat{\theta}_i \sim \mathcal{N}(\theta_i, \sigma^2\left[(Z^T Z)^{-1}\right]_{ii})$, или, что эквивалентно,
+\[
+\frac{\widehat{\theta}_i - \theta_i}{\sigma \sqrt{\left[(Z^T Z)^{-1}\right]_{ii}}} \sim \mathcal{N}(0, 1).
+\]
+
+Было бы неплохо избавиться от $\sigma$, чтобы оставить только один неизвестный $\theta_i$. У нас уже есть одна статистика с известным распределением и торчащим $\sigma$~--- это (\ref{chi_nk}). Если поделить одно на корень от другого, то получится от него избавиться, но непонятно, будет ли у полученной случайной величины конкретное распределение, не зависящее от параметров.
+
+Оказывается, будет --- из теоремы об ортогональном разложении следует, что $Z \widehat{\boldtheta}$ и $\mathbf X - Z \widehat{\boldtheta}$ будут независимыми, а значит, 
+\[
+\widehat{\boldtheta} = (Z^T Z)^{-1} Z^T \cdot Z \widehat{\boldtheta}\;\; \text{  и  }\;\; \widehat{\sigma^2} = \|\mathbf X - Z\widehat{\boldtheta}\|^2 / (n - k)
+\]
+также независимы как функции от независимых случайных векторов. Поэтому распределение
+\[
+\left. \frac{\widehat{\theta}_i - \theta_i}{\sigma \sqrt{\left[(Z^T Z)^{-1}\right]_{ii}}} \right/ \sqrt{\frac{1}{(n-k)\sigma^2} \|\mathbf X - Z\widehat{\boldtheta}\|^2} = 
+\frac{\widehat{\theta}_i - \theta_i}{\sqrt{\widehat{\sigma^2}\left[(Z^T Z)^{-1}\right]_{ii}}}
+\]
+не зависит от неизвестных параметров. В разделе \ref{norm_intervals} мы уже знакомились с распределением этой величины --- это распределение Стьюдента. Таким образом,
+\begin{equation}\label{student}
+    \frac{\widehat{\theta}_i - \theta_i}{\sqrt{\widehat{\sigma^2}\left[(Z^T Z)^{-1}\right]_{ii}}} \sim T_{n - k}.
+\end{equation}
+
+Полученные распределения приведённых статистик позволяют искать доверительные интервалы для $\theta_i$ и $\sigma^2$. Из соотношения (\ref{chi_nk}) имеем доверительный интервал для $\sigma^2$:
+\begin{gather*}
+    \pth[\boldtheta, \sigma^2]\left(\frac{(n-k)\widehat{\sigma^2}}{\chi^2_{n-k, (1+\gamma)/2}} < \sigma^2 < \frac{(n-k)\widehat{\sigma^2}}{\chi^2_{n-k, (1-\gamma)/2}} \right) = \\
+    = \pth[\boldtheta, \sigma^2]\left(\chi^2_{n-k, (1-\gamma)/2} < \frac{(n-k)\widehat{\sigma^2}}{\sigma^2} < \chi^2_{n-k, (1+\gamma)/2} \right)=\gamma,
+\end{gather*}
+где $\chi^2_{n-k, p}$ -- $p$-квантиль распределения $\chi^2_{n-k}$. В то же время из (\ref{student}) имеем следующие ДИ для $\theta_i$:
+\begin{gather*}
+    \pth[\boldtheta, \sigma^2]\left(\widehat{\theta}_i - T_{n-k,(1+\gamma)/2}\sqrt{\widehat{\sigma^2}\left[(Z^T Z)^{-1}\right]_{ii}} < \theta_i < \widehat{\theta}_i + T_{n-k, (1+\gamma)/2}\sqrt{\widehat{\sigma^2}\left[(Z^T Z)^{-1}\right]_{ii}} \right) =\gamma,
+\end{gather*}
+где $T_{n-k, p}$ -- $p$-квантиль распределения $T_{n-k}$. Здесь мы воспользовались симметричностью распределения Стьюдента, благодаря которой выполнено $T_{n-k, (1+\gamma)/2} = -T_{n-k, (1-\gamma)/2}$.
+
+Впрочем, из сказанного выше легко понять, как построить доверительный интервал для произвольной линейной комбинации неизвестных параметров, что особенно полезно в контексте примера \ref{gauss_example}. Пусть необходимо оценить функцию $\tau(\boldtheta) = \mathbf c^T\boldtheta$, где $\mathbf c \in \R^k$ --- вектор из коэффициентов, с которыми мы берём те или иные компоненты вектора $\boldtheta$. По линейности матожидания несмещённой оценкой $\tau(\boldtheta)$ (а значит и оптимальной) будет оценка $\mathbf c^T\widehat{\boldtheta} \sim \mathcal{N}(\mathbf c^T\boldtheta, \sigma^2 \mathbf c^T (Z^TZ)^{-1}\mathbf c)$ (в случае $\tau(\boldtheta) = \theta_i$ вектор $\mathbf c$ будет содержать лишь одну единицу на $i$-ой позиции посреди нулей, поэтому дисперсия оценки будет равной $\sigma^2\left[(Z^T Z)^{-1}\right]_{ii}$, как было получено выше). Таким образом,
+\begin{gather*}
+    \frac{\mathbf c^T\widehat{\boldtheta} - \mathbf c^T\boldtheta}{\sqrt{\sigma^2 \mathbf c^T (Z^TZ)^{-1}\mathbf c}}\sim \mathcal{N}(0, 1) \Longrightarrow \frac{\mathbf c^T\widehat{\boldtheta} - \mathbf c^T\boldtheta}{\sqrt{\widehat{\sigma^2} \mathbf c^T (Z^TZ)^{-1}\mathbf c}} \sim T_{n-k},\\
+    \pth[\boldtheta, \sigma^2]\left(\mathbf c^T\widehat{\boldtheta} - T_{n-k,(1+\gamma)/2}\sqrt{\widehat{\sigma^2} \mathbf c^T (Z^TZ)^{-1}\mathbf c} < \mathbf c^T\boldtheta < \mathbf c^T\widehat{\boldtheta} + T_{n-k, (1+\gamma)/2}\sqrt{\widehat{\sigma^2} \mathbf c^T (Z^TZ)^{-1}\mathbf c} \right) =\gamma,
+\end{gather*}
+
+\subsection{Проверка линейных гипотез}
+
+В модели гауссовской линейной регрессии часто возникают некоторые предположения касательно роли и взаимосвязи компонент вектора параметров $\boldtheta$. Обычно их можно записать как систему линейных уравнений, которой должны удовлетворять параметры. Таким образом, наша гипотеза будет состоять в предположении, что $\boldtheta$ лежит в некоторой гиперплоскости, то есть 
+\[
+H_0\colon T\boldtheta = \boldtau,
+\]
+где $T\in\R^{m \times k}$, $\boldtau \in \R^m$ -- известные величины, причём будем допускать, что $\rk{T} = m \le k$. Отсюда собственно и название гипотезы: мы накладываем некоторые линейные ограничения на параметр $\boldtheta$.
+
+Из утверждения \ref{mnk_prop} мы знаем матожидание и ковариационную матрицу у $\widehat{\boldtheta}$, а значит, можем найти её и у $T\widehat{\boldtheta}$:
+\begin{gather*}
+    \me[\boldtheta, \sigma^2] T\widehat{\boldtheta} = T\me[\boldtheta, \sigma^2] \widehat{\boldtheta} = T\boldtheta,\\
+    \va[\boldtheta, \sigma^2] T\widehat{\boldtheta} = T \left[\va[\boldtheta, \sigma^2] \widehat{\boldtheta}\right] T^T = \sigma^2 \underbrace{T (Z^T Z)^{-1} T^T}_{\phantom{0}=B} = \sigma^2 B.
+\end{gather*}
+$T\widehat{\boldtheta}$, как линейное преобразование над нормально распределённым $\widehat{\boldtheta}$, само нормально распределено, то есть
+\[
+T\widehat{\boldtheta} \sim \mathcal{N}(T\boldtheta, \sigma^2 B).
+\]
+В силу максимальности ранга $T$ матрица $B$ будет невырожденной, а значит --- положительно определённой, поэтому у неё существует $\sqrt{B}$, откуда
+\begin{gather*}
+    \frac{1}{\sigma} \sqrt{B}^{-1} (T\widehat{\boldtheta} - T\boldtheta) \sim \mathcal{N}(0, E_m) \Longrightarrow\\
+    \left\|\frac{1}{\sigma} \sqrt{B}^{-1} (T\widehat{\boldtheta} - T\boldtheta)\right\|^2 = \frac{1}{\sigma^2}(T\widehat{\boldtheta} - T\boldtheta)^T B^{-1} (T\widehat{\boldtheta} - T\boldtheta) \sim \chi^2_m.
+\end{gather*}
+При верности гипотезы $T\boldtheta = \boldtau$, а значит, при подстановке этого тождества в выражение выше получаем статистику, зависящую от $\widehat{\boldtheta}$,
+\[
+\frac{1}{\sigma^2}(T\widehat{\boldtheta} - \boldtau)^T B^{-1} (T\widehat{\boldtheta} - \boldtau) \sim \chi^2_m.
+\]
+Вспомним, что у нас в запасе есть независящая от $\widehat{\boldtheta}$ статистика
+\[
+\frac{1}{\sigma^2} \|\mathbf X - Z \widehat{\boldtheta}\|^2 \sim \chi^2_{n-k}.
+\]
+Поделив одно на другое, мы избавимся от неизвестной $\sigma^2$, да ещё и получим <<хорошее>> распределение Фишера. При верности $H_0$ имеем
+\[
+\frac{(T\widehat{\boldtheta} - \boldtau)^T B^{-1} (T\widehat{\boldtheta} - \boldtau)}{\|\mathbf X - Z \widehat{\boldtheta}\|^2}\cdot \frac{n - k}{m} \sim F_{m, n-k}.
+\]
+
+Итоговый критерий записывается так:
+\[
+R = \left\{\frac{(T\widehat{\boldtheta} - \tau)^T B^{-1} (T\widehat{\boldtheta} - \tau)}{\|\mathbf X - Z \widehat{\boldtheta}\|^2}\cdot \frac{n - k}{m} > f_{1-\alpha}\right\},
+\]
+где $f_{p}$ -- $p$-квантиль распределения Фишера со степенями свободы $m$ и $n-k$.
+
+\begin{example}[t-test revisited]
+    Допустим, нам пришли две независимые выборки: $X_1, \ldots, X_n$ и $Y_1, \ldots, Y_m$, элементы которых имеют распределение $\mathcal{N}(a, \sigma^2)$ и $\mathcal{N}(b, \sigma^2)$ соответственно. Хотелось бы проверить гипотезу
+    \[
+    H_0\colon a = b.
+    \]
+
+    Выборки можно рассматривать как общую выборку из модели гауссовской линейной регрессии, а $a$ и $b$ --- как координаты одного вектора параметров $\boldtheta$. Таким образом:
+    \[
+    \mathbf X = \begin{pmatrix}
+        X_1\\ \vdots \\ X_n \\ Y_1\\ \vdots \\ Y_m
+    \end{pmatrix} = Z\boldtheta + \boldepsilon = 
+    \begin{pmatrix}
+        1 & 0\\ \vdots & \vdots \\ 1 & 0 \\ 0 & 1\\ \vdots & \vdots \\ 0 & 1
+    \end{pmatrix}
+    \begin{pmatrix}
+        a \\ b
+    \end{pmatrix} + \boldepsilon,
+    \]
+    где $\boldepsilon \sim \mathcal{N}(\mathbf 0, \sigma^2 E_{n+m})$. Стало быть, $H_0$ есть линейная гипотеза:
+    \[
+    H_0\colon T\boldtheta =  \begin{pmatrix}
+        1 & -1
+    \end{pmatrix}
+    \begin{pmatrix}
+        a\\ b
+    \end{pmatrix}
+    = 0 = \tau.
+    \]
+    Найдём величины, участвующие в критерии выше:
+    \begin{gather*}
+        Z^T Z = \begin{pmatrix}
+            n & 0 \\ 0 & m
+        \end{pmatrix},\;\;\;
+        \widehat{\boldtheta} = \begin{pmatrix}
+            \overline{\mathbf X}\\ \overline{\mathbf Y}
+        \end{pmatrix},\;\;\;
+        B = T(Z^T Z)^{-1} T^T = \frac{1}{n} + \frac{1}{m},\\
+        (T\widehat{\boldtheta} - \tau)^T B^{-1} (T\widehat{\boldtheta} - \tau) = \frac{nm(\overline{\mathbf X} - \overline{\mathbf Y})^2}{n+m},\;\;\;
+        \|\mathbf X - Z \widehat{\boldtheta}\|^2 = \sum_{i=1}^{n} (X_i - \overline{\mathbf X})^2 + \sum_{j=1}^{m} (Y_j - \overline{\mathbf Y})^2.
+    \end{gather*}
+    Таким образом, критерий для проверки $H_0$ имеет вид
+    \[
+    R = \left\{(\mathbf{x}, \mathbf{y})\colon \frac{nm(n+m-2)(\overline{\mathbf{x}} - \overline{\mathbf{y}})^2}{(n+m)\left(\sum_{i=1}^{n} (x_i - \overline{\mathbf{x}})^2 + \sum_{j=1}^{m} (y_j - \overline{\mathbf{y}})^2\right)} > f_{1-\alpha}\right\},
+    \]
+    где $f_{p}$ --- $p$-квантиль распределения Фишера со степенями свободы $1$ и $n+m-2$ (сравните с $t$-критерием Стьюдента из раздела \ref{ttest}, правда похоже?). Процедуру выше можно обобщить на случай нескольких выборок, что позволяет проверять сложную гипотезу о том, что у независимых групп одинаковые средние (см. задачу \ref{oneway_ANOVA}).
+\end{example}
+
+\begin{example}\label{important_features}
+    Может возникнуть ситуация, когда среди признаков определённо имеются лишние, которые не дают существенного вклада в нахождении целевой величины. Было бы крайне полезно проверять признаки на их полезность, так как выкидывание бесполезных признаков позволяет понизить размерность задачи. \textit{Гипотезу о значимости признаков} (без потери общности, первых $m$ признаков) можно формализовать как
+    \[
+    H_0\colon \theta_1 = \ldots = \theta_m = 0.
+    \]
+    Гипотезу можно переписать как $H_0\colon T\boldtheta = \mathbf{0}$, где 
+    \[
+    T = 
+    \begin{pmatrix}
+        1 & 0 & \ldots & 0 & 0 & \ldots & 0\\
+        0 & 1 & \ldots & 0 & 0 & \ldots & 0\\
+        \hdotsfor{7}\\
+        0 & 0 & \ldots & 1 & 0 & \ldots & 0
+    \end{pmatrix}.
+    \]
+\end{example}
+
+\subsection*{Задачи}
+
+\begin{problem}
+    Докажите, что линейный переход от одного пространства признаков в другое (то есть когда в качестве матрицы <<объект-признак>> берётся не $Z$, а $ZS$, где $S \in GL(k, \R)$) концептуально не меняет оценку МНК (и заодно объясните, что это значит).
+\end{problem}
+
+\begin{problem}
+    Пусть помимо $k$ вещественных признаков имеется категориальный признак, принимающий $d$ различных значений. Для $j$-ого из них рассматривается своя линейная зависимость с $n_j$ объектами:
+    \[
+    \mathbf X^{(j)} = Z^{(j)} \boldtheta + \boldepsilon^{(j)},
+    \]
+    где $\mathbf X^{(j)} \in \R^{n_j}$, $Z^{(j)} \in \R^{n_j \times k}$. Сведите задачу к одной линейной регрессии и покажите, что оценка МНК не поменяется. Чем это отличается от тупого добавления $d-1$ onehot признаков?
+\end{problem}
+
+\begin{problem}\label{full_suff_stat_for_linreg}
+    Докажите теорему \ref{suff_stat_for_linreg}, а именно покажите, что статистика $(\widehat{\boldtheta}, \|\mathbf X - Z \widehat{\boldtheta}\|^2)$ является \textbf{(а)} достаточной; \textbf{(б)} полной в модели гауссовской линейной регрессии.
+
+    \textit{Указание.} \textbf{(а)} Теорема Пифагора: существует; \textbf{(б)} Чтобы применить достаточное условие полноты для экспоненциального семейства, попробуйте рассмотреть другую статистику, которая <<содержит столько же информации>>, сколько и исходная.
+\end{problem}
+
+\begin{problem}
+    Постройте доверительный интервал уровня доверия $\gamma$ для целевой величины, отвечающего некоторому набору признаков $\mathbf z_0$ (то есть $\mathbf z_0^T\boldtheta + \epsilon$, где $\epsilon \sim \mathcal{N}(0, \sigma^2)$) для модели гауссовской линейной регрессии.
+\end{problem}
+
+\begin{problem}
+    Покажите, что оценка \eqref{weighted_mnk_formula} в обобщённой модели линейной регрессии является наилучшей в среднеквадратичном подходе в классе линейных несмещённых оценок при выполнении условий \ref{zero_me}, \ref{l2} и \ref{lin_ind}.
+\end{problem}
+
+\begin{problem}[one-way ANOVA]\label{oneway_ANOVA}
+	Пусть имеется $k$ выборок $\mathbf{X}_{1}, \ldots, \mathbf{X}_k$, причём $i$-ая из них $\mathbf{X}_{i} = (X_{i1}, \ldots, X_{i n_i})$ состоит из $n_i$ наблюдений, которые распределены как $\mathcal{N}(\mu_i, \sigma^2)$ (дисперсии, как и ранее, считаются равными, хоть и неизвестными). Сведя задачу к линейной регрессии, предложите критерий для проверки гипотезы $H_0\colon \mu_1 = \mu_2 = \ldots = \mu_k$ против общей альтернативы.
+\end{problem}
+
+
